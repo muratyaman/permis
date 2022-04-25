@@ -1,0 +1,33 @@
+{
+  "name": "permis-oauth2-api",
+  "version": "1.0.0",
+  "description": "sample permis api for services like authorization codes, clients, consumers, identities, scopes and tokens",
+  "main": "build/index.js",
+  "scripts": {
+    "clean": "rimraf lib",
+    "build:tsc": "tsc --project ./tsconfig.build.json",
+    "build": "npm run clean && npm run build:tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "oauth2",
+    "oauth",
+    "server",
+    "examples",
+    "permis"
+  ],
+  "author": "Haci Murat Yaman",
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "body-parser": "^1.20.0",
+    "express": "^4.17.3",
+    "lodash": "^4.17.21",
+    "pg": "^8.7.3",
+    "redis": "^4.0.6"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.13",
+    "@types/lodash": "^4.14.182",
+    "@types/pg": "^8.6.5"
+  }
+}
