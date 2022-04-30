@@ -1,9 +1,10 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import bodyParser from 'body-parser';
-import objGet from 'lodash/get';
+import cors from 'cors';
+import { randomUUID } from 'crypto';
 import { readFileSync } from 'fs';
 import { createClient } from 'redis';
-import * as p from '../../oauth2-api/src/permis';
+import * as p from './permis';
 
 main();
 
@@ -11,7 +12,12 @@ async function main(penv = process.env) {
   const server = express();
 
   server.use(bodyParser.urlencoded({ extended: false }));
-  server.use(bodyParser.json());
+  server.use(express.json());
+  server.use(cors());
+  server.use((req, _res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    return next();
+  });
 
   const redis = createClient({
     url: penv.REDIS_URL ?? 'redis://localhost:6379',
@@ -22,7 +28,7 @@ async function main(penv = process.env) {
   const identityRepo = new p.RepoWithRedis<p.IIdentityDto>('oauth2_users', redis);
 
   const privateKey = readFileSync('privateKey.pem');
-  const publicKey  = readFileSync('publicKey.pem');
+  const publicKey = readFileSync('publicKey.pem');
 
   const securityService = new p.SecurityServiceDefault(privateKey, publicKey);
 
@@ -37,13 +43,28 @@ async function main(penv = process.env) {
     return user;
   }
 
-  server.post('/login', async(req, res) => {
+  async function signUp(req: Request, res: Response) {
+    const username = req.body.username ?? '';
+    const password = req.body.password ?? '';
+    const password_confirm = req.body.password_confirm ?? '';
+    try {
+      if (!username || !password || (password !== password_confirm)) throw new Error('Invalid request');
+      const password_hash = await securityService.hashText(password);
+      const id = randomUUID();
+      const created = await identityRepo.create(id, { id, username, password_hash });
+      res.json({ data: created ? id : false });
+    } catch (err) {
+      res.json({ error: err instanceof Error ? err.message : 'Signup failed' });
+    }
+  }
+
+  async function signIn(req: Request, res: Response) {
     const username = req.body.username ?? '';
     const password = req.body.password ?? '';
     try {
       const user = await verifyUser(username, password);
       const token = await securityService.generateJwt({
-        client_id: user.id,
+        client_id: 'self',
         user_id: user.id,
         scope: 'profile',
       }, 60 * 5);
@@ -54,11 +75,23 @@ async function main(penv = process.env) {
     } catch (err) {
       res.json({ error: err instanceof Error ? err.message : 'Login failed' });
     }
-  });
+  }
 
-  server.post('/me', async(req, res) => {
-    // TODO: take token from auth header, decode it and return output
-  });
+  async function me(req: Request, res: Response) {
+    const authHeader = req.get('authorization') ?? '';
+    const [kind, token] = authHeader.split(' ');
+    if (kind && token) {
+      const data = await securityService.verifyJwt(token);
+      if (data && data.user_id) {
+        return res.json({ data });
+      }
+    }
+    res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  server.post('/sign-up', signUp);
+  server.post('/sign-in', signIn);
+  server.post('/me', me);
 
   server.listen(3001, () => console.log('IdP service is ready at http://localhost:3001'));
 }

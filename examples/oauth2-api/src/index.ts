@@ -4,5 +4,5 @@ main();
 
 async function main() {
   const { server } = await factory(process.env);
-  server.listen(8000, () => console.log('Ready at http://localhost:8000'));
+  server.listen(8000, () => console.log('OAuth2 service is ready at http://localhost:8000'));
 }

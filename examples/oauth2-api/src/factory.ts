@@ -30,18 +30,12 @@ export async function factory(penv = process.env) {
   const permis = new p.PermisService(conf);
 
   async function authorize(req: Request, res: Response) {
-    const formData = Object.assign({}, req.body, req.query);
-    // TODO: validate formData
+    const formData = Object.assign({}, req.body, req.query) as Partial<p.oauth2.IRequestToAuthorize>;
 
-    const result = await permis.authorize({
-      response_type: String(objGet(formData, 'response_type', 'code')),
-      client_id:     String(objGet(formData, 'client_id', '')),
-      redirect_uri:  String(objGet(formData, 'redirect_uri', '')),
-      scope:         String(objGet(formData, 'scope', '')),
-      state:         String(objGet(formData, 'state', '')),
-    });
+    const result = await permis.authorize(formData);
 
     const uri = result.redirect_uri.toString();
+    console.debug({ uri });
 
     if (result.success) {
       console.info(result.success);
@@ -53,9 +47,9 @@ export async function factory(penv = process.env) {
         // next: Client should use auth code for access token
       }
     } else {
-      console.error(result.error);
+      console.warn(result.error);
     }
-    console.info({ uri });
+
     res.redirect(uri);
   }
 

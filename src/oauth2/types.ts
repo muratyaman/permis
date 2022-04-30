@@ -33,7 +33,7 @@ export type IRequestToAuthorize  = IRequestToStartAuthorization  | IRequestToFin
 export type IResponseToAuthorize = IResponseToStartAuthorization | IResponseToFinishAuthorization;
 
 export interface IRequestToStartAuthorization {
-  response_type:  string; // 'code'
+  response_type:  string | 'code' | 'token';
   client_id:      string;
   redirect_uri:   string;
   scope:          string;
@@ -41,23 +41,23 @@ export interface IRequestToStartAuthorization {
   nonce?:         string | null;
 }
 export interface IResponseToStartAuthorization {
-  request: IRequestToStartAuthorization;
+  request:      IRequestToStartAuthorization;
   redirect_uri: URL;
-  success?: { consent_id: string; };
-  error?: IError;
+  success?:     { consent_id: string; };
+  error?:       IError;
 }
 
 export interface IRequestToFinishAuthorization extends IRequestToStartAuthorization {
   allow:           string | 'true' | 'false';
-  consent_id?:     string;
-  approval_token?: string;
+  consent_id?:     string | null;
+  approval_token?: string | null;
 }
 
 export interface IResponseToFinishAuthorization {
-  request: IRequestToFinishAuthorization;
+  request:      IRequestToFinishAuthorization;
   redirect_uri: URL;
-  success?: { code: string; }
-  error?: IError;
+  success?:     { code: string; }
+  error?:       IError;
 }
 
 export type IRequestToCreateToken  = IRequestToCreateTokenByAuthCode | IRequestToCreateTokenByCredentials;
@@ -85,15 +85,15 @@ export interface ITokenOutput {
 }
 
 export interface IResponseToCreateTokenByAuthCode {
-  request: IRequestToCreateTokenByAuthCode;
+  request:  IRequestToCreateTokenByAuthCode;
   success?: ITokenOutput;
-  error?: IError;
+  error?:   IError;
 }
 
 export interface IResponseToCreateTokenByCredentials {
-  request: IRequestToCreateTokenByCredentials;
+  request:  IRequestToCreateTokenByCredentials;
   success?: ITokenOutput;
-  error?: IError;
+  error?:   IError;
 }
 
 export interface IRequestToAuthenticate {
@@ -104,7 +104,7 @@ export interface IResponseToAuthenticate {
   request: IRequestToAuthenticate;
   success?: {
     user_id: string;
-    token: string;
+    token:   string;
   };
   error?: IError;
 }

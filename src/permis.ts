@@ -18,10 +18,18 @@ export class PermisService implements IPermisService {
 
   constructor(public conf: IPermisConfiguration) {}
 
-  authorize(req: oauth2.IRequestToAuthorize): Promise<oauth2.IResponseToAuthorize> {
-    if (oauth2.isRequestToStartAuthorization(req))
-      return this._authorizeStart(req);
-    return this._authorizeFinish(req);
+  authorize(req: Partial<oauth2.IRequestToAuthorize>): Promise<oauth2.IResponseToAuthorize> {
+    try {
+      const reqToFinish = oauth2.validateRequestToFinishAuthorization(req); // throws error
+      return this._authorizeFinish(reqToFinish);
+    } catch (err1) {
+      try {
+        const reqToStart = oauth2.validateRequestToStartAuthorization(req); // throws error
+        return this._authorizeStart(reqToStart);
+      } catch (err2) {
+        throw err2;
+      }
+    }
   }
 
   async _authorizeStart(request: oauth2.IRequestToStartAuthorization): Promise<oauth2.IResponseToStartAuthorization> {
@@ -69,11 +77,13 @@ export class PermisService implements IPermisService {
     return response;
   }
 
-  async authenticate(request: oauth2.IRequestToAuthenticate): Promise<oauth2.IResponseToAuthenticate> {
-    const response: oauth2.IResponseToAuthenticate = { request };
+  async authenticate(request: Partial<oauth2.IRequestToAuthenticate>): Promise<oauth2.IResponseToAuthenticate> {
+    const { token = '' } = request;
+    const _request: oauth2.IRequestToAuthenticate = { token };
+    const response: oauth2.IResponseToAuthenticate = { request: _request };
 
     try {
-      const user = await this.conf.identityService.authenticate({ token: request.token });
+      const user = await this.conf.identityService.authenticate({ token });
 
       const accessToken = await this.conf.securityService.generateJwt({
         client_id: 'self', // TODO: review
