@@ -106,3 +106,8 @@ dist
 lib/
 
 .DS_Store
+
+privateKey.pem
+publicKey.pem
+
+build
