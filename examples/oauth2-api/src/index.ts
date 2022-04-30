@@ -1,6 +1,6 @@
 import { factory } from './factory';
 
-main()
+main();
 
 async function main() {
   const { server } = await factory(process.env);

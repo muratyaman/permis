@@ -11,7 +11,7 @@ export class ScopeServiceWithRedis implements IScopeService<IScopeDto> {
     return this.r.retrieve(id);
   }
 
-  async verifyScopes(scopes: string[]): Promise<boolean> {
+  async verifyScopes(scopes: string[], _client_id: IdType): Promise<boolean> {
     const rows = await this.r.findMany({});
     const ids = rows.map(r => r.id);
     for (const scope of scopes) {

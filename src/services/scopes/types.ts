@@ -2,7 +2,7 @@ import { IBaseDto, IdType } from '../../dto';
 
 export interface IScopeService<T extends IScopeDto = IScopeDto> {
   find(id: IdType): Promise<T>;
-  verifyScopes(scope: string[]): Promise<boolean>;
+  verifyScopes(scope: string[], client_id?: IdType): Promise<boolean>;
 }
 
 /**

@@ -16,23 +16,18 @@ export class TokenServiceWithRedis implements ITokenService<ITokenDto> {
     // TODO: validate
 
     const _dto: ITokenDto = {
-      id:        dto.id ?? uuid(),
-      client_id: dto.client_id ?? '',
-      
-      token_type: dto.token_type ?? 'bearer',
-
+      id:                       dto.id ?? uuid(),
+      user_id:                  dto.user_id ?? '',
+      client_id:                dto.client_id ?? '',
+      is_used:                  dto.is_used ?? 0,
+      token_type:               dto.token_type ?? 'bearer',
       access_token:             dto.access_token ?? '',
       access_token_expires_at:  dto.access_token_expires_at ?? '',
-
       refresh_token:            dto.refresh_token ?? '',
       refresh_token_expires_at: dto.refresh_token_expires_at ?? '',
-
-      user_id:    dto.user_id ?? '',
-      scope:      dto.scope ?? '',
-
-      is_used:    dto.is_used ?? 0,
-      created_at: ts(),
-      updated_at: ts(),
+      scope:                    dto.scope ?? '',
+      created_at:               ts(),
+      updated_at:               ts(),
     };
     await this.r.create(_dto.id, _dto);
     return _dto;
@@ -44,5 +39,4 @@ export class TokenServiceWithRedis implements ITokenService<ITokenDto> {
       updated_at: ts(),
     });
   }
-
 }

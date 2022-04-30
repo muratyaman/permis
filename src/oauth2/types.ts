@@ -25,7 +25,7 @@ export enum ErrorTypeEnum {
 }
 
 export interface IError {
-  error: ErrorTypeEnum;
+  error:              ErrorTypeEnum;
   error_description?: string;
 }
 
