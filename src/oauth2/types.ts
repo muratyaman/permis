@@ -54,10 +54,10 @@ export interface IRequestToFinishAuthorization extends IRequestToStartAuthorizat
 }
 
 export interface IResponseToFinishAuthorization {
-  request:      IRequestToFinishAuthorization;
-  redirect_uri: URL;
-  success?:     { code: string; }
-  error?:       IError;
+  request:       IRequestToFinishAuthorization;
+  redirect_uri?: URL;
+  success?:      { code: string; }
+  error?:        IError;
 }
 
 export type IRequestToCreateToken  = IRequestToCreateTokenByAuthCode | IRequestToCreateTokenByCredentials;

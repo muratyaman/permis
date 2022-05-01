@@ -1,7 +1,7 @@
 import { createClient } from 'redis';
 import { IRepo } from './types';
 import { IObject } from '../dto';
-import { ErrRecordNotFound } from '../errors';
+import { ErrDuplicate, ErrRecordNotFound } from '../errors';
 
 const makeKeyMaker = (name: string) => {
   return (id: string) => `${name}:${id}`;
@@ -40,6 +40,12 @@ export class RepoWithRedis<T extends IObject = IObject> implements IRepo<T> {
   }
 
   async create(id: string, dto: Partial<T>): Promise<boolean> {
+    try {
+      const found = await this.retrieve(id);
+      if (found) throw new ErrDuplicate('duplicate id');
+    } catch (err) {
+      if (err instanceof ErrDuplicate) throw err;
+    }
     const json = JSON.stringify(dto);
     await this.r.SET(this._key(id), json);
     return true;

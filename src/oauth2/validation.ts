@@ -1,5 +1,5 @@
 import { ErrInvalidRequest } from '../errors';
-import { GrantTypeEnum, IRequestToFinishAuthorization, IRequestToStartAuthorization, ResponseTypeEnum } from './types';
+import { GrantTypeEnum, IRequestToCreateTokenByAuthCode, IRequestToCreateTokenByCredentials, IRequestToFinishAuthorization, IRequestToStartAuthorization, ResponseTypeEnum } from './types';
 
 export const GRANT_TYPES: string[] = Object.values(GrantTypeEnum);
 
@@ -40,4 +40,22 @@ export function validateRequestToFinishAuthorization(req: Partial<IRequestToFini
   if (!scope) throw new ErrInvalidRequest('"scope" required');
   if (!allow) throw new ErrInvalidRequest('"allow" required');
   return { response_type, client_id, redirect_uri, scope, state, nonce, allow, consent_id, approval_token };
+}
+
+export function validateRequestToCreateTokenByAuthCode(req: Partial<IRequestToCreateTokenByAuthCode>): IRequestToCreateTokenByAuthCode {
+  const { grant_type = '', client_id = '', redirect_uri = '', code = '' } = req;
+  if (!grant_type) throw new ErrInvalidRequest('"grant_type" required');
+  if (!client_id) throw new ErrInvalidRequest('"client_id" required');
+  if (!redirect_uri) throw new ErrInvalidRequest('"redirect_uri" required');
+  if (!code) throw new ErrInvalidRequest('"code" required');
+  return { grant_type, client_id, redirect_uri, code };
+}
+
+export function validateRequestToCreateTokenByCredentials(req: Partial<IRequestToCreateTokenByCredentials>): IRequestToCreateTokenByCredentials {
+  const { grant_type = '', client_id = '', redirect_uri = '', client_secret = '' } = req;
+  if (!grant_type) throw new ErrInvalidRequest('"grant_type" required');
+  if (!client_id) throw new ErrInvalidRequest('"client_id" required');
+  if (!redirect_uri) throw new ErrInvalidRequest('"redirect_uri" required');
+  if (!client_secret) throw new ErrInvalidRequest('"client_secret" required');
+  return { grant_type, client_id, redirect_uri, client_secret };
 }

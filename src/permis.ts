@@ -111,21 +111,20 @@ export class PermisService implements IPermisService {
   }
 
   async _authorizeFinish(request: oauth2.IRequestToFinishAuthorization): Promise<oauth2.IResponseToFinishAuthorization> {
-    const response: oauth2.IResponseToFinishAuthorization = {
-      request,
-      redirect_uri: new URL(request.redirect_uri),
-    };
-
-    // prepare consumer's redirect URI
-    if (request.state) response.redirect_uri.searchParams.append('state', request.state);
-    if (request.nonce) response.redirect_uri.searchParams.append('nonce', request.nonce);
-
+    // NOTE: the server should only redirect the user to the redirect URL if the redirect URL has been registered!
+    const response: oauth2.IResponseToFinishAuthorization = { request };
     try {
       const client = await this.conf.clientService.find(request.client_id);
       if (!client) throw new ErrUnauthorizedClient();
 
       const clientAndUriVerified = await this.conf.clientService.verifyClientWithRedirectUri(client, request.redirect_uri);
       if (!clientAndUriVerified) throw new ErrUnauthorizedClient();
+
+      // prepare consumer's redirect URI
+      const redirect_uri = new URL(request.redirect_uri);
+      if (request.state) redirect_uri.searchParams.append('state', request.state);
+      if (request.nonce) redirect_uri.searchParams.append('nonce', request.nonce);
+      response.redirect_uri = redirect_uri;
 
       const isAllowed = this._isAllowed(request.allow);
 
@@ -154,16 +153,24 @@ export class PermisService implements IPermisService {
         error:             err instanceof PermisError ? err.code : oauth2.ErrorTypeEnum.server_error,
         error_description: err instanceof Error ? err.message : undefined,
       };
-      response.redirect_uri.searchParams.append('error', response.error.error);
+      if (response.redirect_uri) response.redirect_uri.searchParams.append('error', response.error.error);
     }
 
     return response;
   }
 
-  async token(request: oauth2.IRequestToCreateToken): Promise<oauth2.IResponseToCreateToken> {
-    if (oauth2.isRequestToCreateTokenByAuthCode(request))
-      return this._createTokenByAuthCode(request);
-    return this._createTokenByCredentials(request);
+  async createToken(req: Partial<oauth2.IRequestToCreateToken>): Promise<oauth2.IResponseToCreateToken> {
+    try {
+      const reqByCode = oauth2.validateRequestToCreateTokenByAuthCode(req); // throws error
+      return this._createTokenByAuthCode(reqByCode);
+    } catch (err1) {
+      try {
+        const reqByCredentials = oauth2.validateRequestToCreateTokenByCredentials(req); // throws error
+        return this._createTokenByCredentials(reqByCredentials);
+      } catch (err2) {
+        throw err2;
+      }
+    }
   }
 
   async _createTokenByAuthCode(request: oauth2.IRequestToCreateTokenByAuthCode): Promise<oauth2.IResponseToCreateTokenByAuthCode> {

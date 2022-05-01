@@ -1,4 +1,4 @@
-import { IBaseDto } from './dto';
+import { IBaseDto, IdType } from './dto';
 import * as oauth2 from './oauth2';
 import { IAuthCodeDto, IAuthCodeService } from './services/authCodes';
 import { IClientDto, IClientService } from './services/clients';
@@ -63,7 +63,7 @@ export interface IPermisService<
     TScopeModel,
     TTokenModel
   >;
-  authorize(req: oauth2.IRequestToAuthorize): Promise<oauth2.IResponseToAuthorize>;
-  authenticate(req: oauth2.IRequestToAuthenticate): Promise<oauth2.IResponseToAuthenticate>;
-  token(req: oauth2.IRequestToCreateToken): Promise<oauth2.IResponseToCreateToken>;
+  authorize(req: Partial<oauth2.IRequestToAuthorize>): Promise<oauth2.IResponseToAuthorize>;
+  authenticate(req: Partial<oauth2.IRequestToAuthenticate>): Promise<oauth2.IResponseToAuthenticate>;
+  createToken(req: Partial<oauth2.IRequestToCreateToken>): Promise<oauth2.IResponseToCreateToken>;
 }

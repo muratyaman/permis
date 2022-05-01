@@ -1,17 +1,16 @@
 import axios from 'axios';
 
-const _client = axios.create({
-  baseURL: 'http://localhost:3001',
-});
+const baseURL = process.env.REACT_APP_IDP_BASE ?? 'http://localhost:3001';
+const _client = axios.create({ baseURL });
 
 export interface ISignUpInput {
-  username?: string;
-  password?: string;
+  username?:         string;
+  password?:         string;
   password_confirm?: string;
 }
 
 export interface ISignUpOutput {
-  data?: string | boolean;
+  data?: { user_id: string; username: string; token: string };
   error?: string;
 }
 
@@ -21,7 +20,8 @@ export interface ISignInInput {
 }
 
 export interface ISignInOutput {
-  data: string;
+  data?: { user_id: string; username: string; token: string };
+  error?: string;
 }
 
 async function signUp(data: ISignUpInput): Promise<ISignUpOutput> {
@@ -34,8 +34,9 @@ async function signIn(data: ISignInInput): Promise<ISignInOutput> {
   return res.data;
 }
 
-export const api = {
+export const idpApi = {
   _client,
+  _conf: { baseURL },
   signUp,
   signIn,
 };

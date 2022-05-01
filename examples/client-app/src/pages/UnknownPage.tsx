@@ -1,9 +1,9 @@
 import { FC } from 'react';
 
-export const AuthPage: FC = () => {
+export const UnknownPage: FC = () => {
   return (
     <div>
-      Auth Page
+      Page not found
     </div>
   );
 }

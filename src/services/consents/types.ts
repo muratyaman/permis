@@ -9,7 +9,7 @@ export interface IConsentService<T extends IConsentDto = IConsentDto> {
 /**
  * A resource consumer can ask permission, user (resource owner) can approve or reject
  */
- export interface IConsentDto extends IBaseDto {
+export interface IConsentDto extends IBaseDto {
   client_id:    IdType;
   redirect_uri: string;
   scope:        string; // use space for separating multiple scopes

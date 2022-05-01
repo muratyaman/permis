@@ -8,6 +8,8 @@ export class PermisError extends Error {
 
 export class ErrRecordNotFound extends PermisError {}
 
+export class ErrDuplicate extends PermisError {}
+
 export class ErrAccessDenied extends PermisError {
   constructor(public message = '', public code = ErrorTypeEnum.access_denied) {
     super(message);
