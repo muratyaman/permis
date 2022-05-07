@@ -1,2 +1,3 @@
-export * from './axios';
+export * from './redis';
 export * from './types';
+export * from './utils';

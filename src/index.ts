@@ -1,4 +1,4 @@
-export * from './config';
+export * from './configWithRedis';
 export * from './constants';
 export * from './dto';
 export * from './errors';
@@ -7,3 +7,4 @@ export * from './permis';
 export * from './repos';
 export * from './services';
 export * from './types';
+export * from './utils';

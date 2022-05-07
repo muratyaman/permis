@@ -1,9 +1,11 @@
-import { IBaseDto, IdType } from '../../dto';
+import { IBaseDto, IdType, IObject } from '../../dto';
 
 export interface IConsentService<T extends IConsentDto = IConsentDto> {
-  find(id: IdType): Promise<T>;
+  findMany(conditions: IObject): Promise<T[]>;
   create(dto: Partial<T>): Promise<T>;
+  retrieve(id: IdType): Promise<T>;
   update(id: IdType, dto: Partial<T>): Promise<boolean>;
+  delete_(id: IdType): Promise<boolean>;
 }
 
 /**
@@ -19,4 +21,4 @@ export interface IConsentDto extends IBaseDto {
   user_id:      string | null; // fill in after approval or rejection
   is_granted:   number; // defaults to 0
 }
-export type IConsentDtoToWrite = Partial<Exclude<IConsentDto, 'id' | 'created_at' | 'updated_at'>>;
+export type IConsentDtoToWrite = Partial<Omit<IConsentDto, 'id' | 'created_at' | 'updated_at'>>;

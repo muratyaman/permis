@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { createClient } from 'redis';
 import { PermisService } from '../src';
-import { PermisConfigWithRedis } from '../src/config';
+import { PermisConfigWithRedis } from '../src/configWithRedis';
 
 describe('PermisService', () => {
   it('should load', () => {

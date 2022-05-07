@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Sample IdP App" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <title>My IdP App</title>
+    <style>
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+
+    <div class="main">
+
+      <h1>My IdP App</h1>
+
+      <h2>"{{$ctx.app_name}}" requires your permission:</h>
+      <ul>
+        {{#$ctx.scopes}}
+        <li>{{.}}</li>
+        {{/$ctx.scopes}}
+      </ul>
+
+      <div id="error"></div>
+
+      <div class="step" id="step1">
+        <h2>Step 1: Sign In</h2>
+        <div>
+          <form name="signInForm">
+            <div>
+              <label for="username">Username: </label>
+              <input type="text" name="username" id="username" value="" />
+            </div>
+            <div>
+              <label for="username">Password: </label>
+              <input type="password" name="password" id="password" value="" />
+            </div>
+            <div>
+              <button type="button">Sign In</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="step hidden" id="step2">
+        <h2>Step 2: Give consent</h2>
+        <form name="consentForm" method="post" action="/oauth2/authorize">
+          <input type="hidden" name="client_id"    id="client_id"    value="" />
+          <input type="hidden" name="redirect_uri" id="redirect_uri" value="" />
+          <input type="hidden" name="state"        id="state"        value="" />
+          <input type="hidden" name="scope"        id="scope"        value="" />
+          <input type="hidden" name="consent_id"   id="consent_id"   value="{{$ctx.consent_id}}" />
+          <p>Do you want to give permission?</p>
+          <div>
+            <button type="button">No, cancel!</button>
+            <button type="button">Yes, allow!</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+
+    <script>
+      let loginToken = '', user_id = '';
+
+      function copyParamToInput(params, id) {
+        //const el = document.getElementById(id);
+        const el = document.forms.consentForm.elements[id];
+        if (el) {
+          el.value = params.get(id);
+        } else {
+          console.warn('element not found, id: ' + id);
+        }
+      }
+
+      function main() {
+        const params = new URLSearchParams(location.search);
+        copyParamToInput('client_id');
+        copyParamToInput('redirect_uri');
+        copyParamToInput('state');
+        copyParamToInput('scope');
+      }
+
+      function goToStep(stepId = 'step2') {
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        step1.classList.remove('hidden');
+        step2.classList.remove('hidden');
+        if (stepId === 'step1') step2.classList.add('hidden');
+        if (stepId === 'step2') step1.classList.add('hidden');
+      }
+
+      function step1() {
+        // sign in
+        const errNode = document.getElementById('error');
+        errNode.innerHTML = ''; // reset
+
+        const signInForm = document.forms.signInForm;
+        const formData = new FormData(signInForm);
+
+        fetch('/idp/tokens', { method: 'post', body: formData })
+          .then(res => {
+            if (!res.ok) throw new Error("HTTP error, status = " + res.status);
+            return res.json();
+          })
+          .then(body => {
+            if (body.data && body.token) {
+              user_id = body.data.id;
+              loginToken = body.token;
+              goToStep('step2');
+              return;
+            }
+            throw new Error(body.error ?? 'Failed to sign in');
+          }).catch(err => {
+            console.error(err);
+            errNode.innerHTML = 'Error: ' + err.message;
+          });
+      }
+
+      function step2Cancel() {
+        const form = document.forms.consentForm;
+      }
+
+      function step2Allow() {
+        const form        = document.forms.consentForm;
+        const consent_id  = form.consent_id.value;
+        const consentData = new FormData();
+        consentData.append('user_id', user_id);
+        consentData.append('is_granted', '1');
+
+        fetch('/oauth2/consents/' + consent_id, { method: 'PATCH', body: consentData })
+          .then(res => {
+            if (!res.ok) throw new Error("HTTP error, status = " + res.status);
+            return res.json();
+          })
+          .then(body => {
+            if (body.error) throw new Error(body.error);
+            if (body.data) {
+
+            }
+          }).catch(err => {
+            console.error(err);
+            errNode.innerHTML = 'Error: ' + err.message;
+          });
+      }
+      main();
+    </script>
+
+</body>
+</html>

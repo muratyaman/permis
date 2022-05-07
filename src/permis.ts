@@ -3,7 +3,7 @@ import { ErrAccessDenied, ErrInvalidScope, ErrServerError, ErrUnauthorizedClient
 import * as oauth2 from './oauth2';
 import { ITokenDto } from './services';
 import { IPermisConfiguration, IPermisService } from './types';
-import { expiresAtStr, hasExpired } from './utils';
+import { assertString, expiresAtStr, hasExpired } from './utils';
 
 /**
  * Consumer/App POSTs + redirects to 1
@@ -32,14 +32,19 @@ export class PermisService implements IPermisService {
     }
   }
 
+  _idpAppUrl() {
+    const url = assertString(this.conf.options.idpAppUrl ?? this.conf.options.selfUrl ?? '', 'idpAppUrl or selfUrl is required');
+    return new URL(url);
+  }
+
   async _authorizeStart(request: oauth2.IRequestToStartAuthorization): Promise<oauth2.IResponseToStartAuthorization> {
     const response: oauth2.IResponseToStartAuthorization = {
       request,
-      redirect_uri: new URL(this.conf.options.idpAppUrl),
+      redirect_uri: this._idpAppUrl(),
     };
     try {
 
-      const client = await this.conf.clientService.find(request.client_id);
+      const client = await this.conf.clientService.retrieve(request.client_id);
       if (!client) throw new ErrUnauthorizedClient();
 
       const clientVerified = await this.conf.clientService.verifyClientWithRedirectUri(client, request.redirect_uri);
@@ -63,9 +68,9 @@ export class PermisService implements IPermisService {
       });
 
       response.success = {
-        consent_id: consent.id,
+        consent_id: String(consent.id),
       };
-      response.redirect_uri.searchParams.append('consent_id', consent.id);
+      response.redirect_uri.searchParams.append('consent_id', String(consent.id));
 
     } catch (err) {
       response.error = {
@@ -78,23 +83,14 @@ export class PermisService implements IPermisService {
   }
 
   async authenticate(request: Partial<oauth2.IRequestToAuthenticate>): Promise<oauth2.IResponseToAuthenticate> {
-    const { token = '' } = request;
+    let { token = '' } = request;
     const _request: oauth2.IRequestToAuthenticate = { token };
     const response: oauth2.IResponseToAuthenticate = { request: _request };
-
+    
     try {
-      const user = await this.conf.identityService.authenticate({ token });
-
-      const accessToken = await this.conf.securityService.generateJwt({
-        client_id: 'self', // TODO: review
-        user_id:   user.id,
-        scope:    'profile',
-      }, C.defaultAccessTokenExpiryInSeconds);
-
-      response.success = {
-        token:   accessToken,
-        user_id: user.id,
-      };
+      token = assertString(token, 'Token required');
+      const decoded = await this.conf.securityService.verifyJwt(token);
+      response.success = decoded;
 
     } catch (err) {
       response.error = {
@@ -114,7 +110,7 @@ export class PermisService implements IPermisService {
     // NOTE: the server should only redirect the user to the redirect URL if the redirect URL has been registered!
     const response: oauth2.IResponseToFinishAuthorization = { request };
     try {
-      const client = await this.conf.clientService.find(request.client_id);
+      const client = await this.conf.clientService.retrieve(request.client_id);
       if (!client) throw new ErrUnauthorizedClient();
 
       const clientAndUriVerified = await this.conf.clientService.verifyClientWithRedirectUri(client, request.redirect_uri);
@@ -129,7 +125,7 @@ export class PermisService implements IPermisService {
       const isAllowed = this._isAllowed(request.allow);
 
       if (request.consent_id) { // update consent
-        const consent = await this.conf.consentService.find(request.consent_id);
+        const consent = await this.conf.consentService.retrieve(request.consent_id);
         consent.is_granted = isAllowed ? 1 : 0;
         await this.conf.consentService.update(consent.id, consent);
       }
@@ -142,9 +138,7 @@ export class PermisService implements IPermisService {
         scope:      request.scope,
       });
 
-      response.success = {
-        code: authCode.id,
-      };
+      response.success = { code: String(authCode.id) };
       response.redirect_uri.searchParams.append('code', response.success.code);
 
     } catch (err) {
@@ -176,17 +170,17 @@ export class PermisService implements IPermisService {
   async _createTokenByAuthCode(request: oauth2.IRequestToCreateTokenByAuthCode): Promise<oauth2.IResponseToCreateTokenByAuthCode> {
     const response: oauth2.IResponseToCreateTokenByAuthCode = { request };
     try {
-      const client = await this.conf.clientService.find(request.client_id);
+      const client = await this.conf.clientService.retrieve(request.client_id);
       if (!client) throw new ErrUnauthorizedClient();
 
       const clientAndUriVerified = await this.conf.clientService.verifyClientWithRedirectUri(client, request.redirect_uri);
       if (!clientAndUriVerified) throw new ErrUnauthorizedClient();
 
-      const authCode = await this.conf.authCodeService.find(request.code);
+      const authCode = await this.conf.authCodeService.findByCode(request.code);
       if (authCode.is_used) throw new ErrAccessDenied();
       if (hasExpired(authCode.expires_at)) throw new ErrAccessDenied();
 
-      const consent = await this.conf.consentService.find(authCode.consent_id);
+      const consent = await this.conf.consentService.retrieve(authCode.consent_id);
       if (!consent.is_granted) throw new ErrAccessDenied();
 
       authCode.is_used = 1;
@@ -237,7 +231,7 @@ export class PermisService implements IPermisService {
   async _createTokenByCredentials(request: oauth2.IRequestToCreateTokenByCredentials): Promise<oauth2.IResponseToCreateTokenByCredentials> {
     const response: oauth2.IResponseToCreateTokenByCredentials = { request };
     try {
-      const client = await this.conf.clientService.find(request.client_id);
+      const client = await this.conf.clientService.retrieve(request.client_id);
       await this.conf.clientService.verifyClientWithSecret(client, request.client_secret);
       await this.conf.clientService.verifyClientWithRedirectUri(client, request.redirect_uri);
 

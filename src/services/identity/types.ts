@@ -1,7 +1,12 @@
-import { IBaseDto } from '../../dto';
+import { IBaseDto, IdType, IObject } from '../../dto';
 
-export interface IIdentityService<T extends IBaseDto = IBaseDto> {
-  authenticate(input: IAuthenticateInput): Promise<T>;
+export interface IIdentityService<T extends IIdentityDto = IIdentityDto> {
+  findMany(conditions: IObject): Promise<T[]>;
+  findByUsername(username: string): Promise<T>;
+  create(dto: Partial<T>): Promise<T>;
+  retrieve(id: IdType): Promise<T>;
+  update(id: IdType, dto: Partial<T>): Promise<boolean>;
+  delete_(id: IdType): Promise<boolean>;
 }
 
 export interface IIdentityDto extends IBaseDto {
@@ -10,9 +15,5 @@ export interface IIdentityDto extends IBaseDto {
   email?:        string;
   name?:         string;
 }
-export type IIdentityDtoToWrite = Partial<Exclude<IIdentityDto, 'created_at' | 'updated_at'>>;
-
-export interface IAuthenticateInput {
-  token_type?: string | 'bearer';
-  token: string;
-}
+export type IIdentityDtoToWrite = Partial<Omit<IIdentityDto, 'id' | 'created_at' | 'updated_at'>>;
+export type IIdentityDtoPublic  = Omit<IIdentityDto, 'password_hash'>;

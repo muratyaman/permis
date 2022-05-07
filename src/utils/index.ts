@@ -22,3 +22,13 @@ export function expiryForJwt(secsInFuture: number): string {
 export function hasExpired(date: string): boolean {
   return new Date(date) < new Date();
 }
+
+export function assertBuffer(b: Buffer | undefined | null, errMsg = 'Buffer expected'): Buffer {
+  if (b === undefined || b === null) throw new Error(errMsg);
+  return b;
+}
+
+export function assertString(s: string | undefined | null, errMsg = 'String expected'): string {
+  if (s === undefined || s === null || s.trim() === '') throw new Error(errMsg);
+  return s;
+}

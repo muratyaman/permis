@@ -2,6 +2,8 @@
  * Type definitions to help OAuth2 flow
  */
 
+import { IJwtPayload } from '../types';
+
 export enum GrantTypeEnum {
   authorization_code = 'authorization_code',
   client_credentials = 'client_credentials',
@@ -97,14 +99,12 @@ export interface IResponseToCreateTokenByCredentials {
 }
 
 export interface IRequestToAuthenticate {
-  token: string; // validate using IdP service
+  token:       string; // validate using IdP service
+  token_type?: string;
 }
 
 export interface IResponseToAuthenticate {
   request: IRequestToAuthenticate;
-  success?: {
-    user_id: string;
-    token:   string;
-  };
+  success?: IJwtPayload;
   error?: IError;
 }

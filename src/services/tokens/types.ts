@@ -1,9 +1,11 @@
-import { IBaseDto, IdType } from '../../dto';
+import { IBaseDto, IdType, IObject } from '../../dto';
 
 export interface ITokenService<T extends ITokenDto = ITokenDto> {
-  find(id: IdType): Promise<T>;
+  findMany(conditions: IObject): Promise<T[]>;
   create(dto: Partial<T>): Promise<T>;
+  retrieve(id: IdType): Promise<T>;
   update(id: IdType, dto: Partial<T>): Promise<boolean>;
+  delete_(id: IdType): Promise<boolean>;
 }
 
 /**

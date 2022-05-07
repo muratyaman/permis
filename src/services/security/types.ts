@@ -1,5 +1,4 @@
-import { IdType } from '../../dto';
-
+import { IJwtPayload } from '../../types';
 
 export interface ISecurityService<TJwtModel extends IJwtPayload = IJwtPayload> {
   privateKey: Buffer;
@@ -12,10 +11,12 @@ export interface ISecurityService<TJwtModel extends IJwtPayload = IJwtPayload> {
 
   generateJwt(payload: TJwtModel, expiryInSeconds?: number): Promise<string>;
   verifyJwt(token: string): Promise<TJwtModel>;
+
+  makeBasicAuthToken(input: IUserAndPass): string;
+  verifyBasicAuth(token: string): IUserAndPass;
 }
 
-export interface IJwtPayload {
-  client_id: IdType;
-  user_id: IdType;
-  scope: string; // use space to separate multiple scopes
+export interface IUserAndPass {
+  username: string;
+  password: string;
 }

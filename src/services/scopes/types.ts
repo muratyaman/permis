@@ -1,8 +1,12 @@
-import { IBaseDto, IdType } from '../../dto';
+import { IBaseDto, IdType, IObject } from '../../dto';
 
 export interface IScopeService<T extends IScopeDto = IScopeDto> {
-  find(id: IdType): Promise<T>;
   verifyScopes(scope: string[], client_id?: IdType): Promise<boolean>;
+  findMany(conditions: IObject): Promise<T[]>;
+  create(dto: Partial<T>): Promise<T>;
+  retrieve(id: IdType): Promise<T>;
+  update(id: IdType, dto: Partial<T>): Promise<boolean>;
+  delete_(id: IdType): Promise<boolean>;
 }
 
 /**
@@ -13,4 +17,4 @@ export interface IScopeService<T extends IScopeDto = IScopeDto> {
   title?:       string | null;
   description?: string | null;
 }
-export type IScopeDtoToWrite = Partial<Exclude<IScopeDto, 'created_at' | 'updated_at'>>;
+export type IScopeDtoToWrite = Partial<Omit<IScopeDto, 'created_at' | 'updated_at'>>;

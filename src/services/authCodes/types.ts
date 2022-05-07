@@ -1,9 +1,12 @@
-import { IBaseDto } from '../../dto';
+import { IBaseDto, IdType, IObject } from '../../dto';
 
 export interface IAuthCodeService<T extends IAuthCodeDto = IAuthCodeDto> {
-  find(code: string): Promise<T>;
+  findMany(conditions: IObject): Promise<T[]>;
+  findByCode(code: string): Promise<T>;
   create(dto: Partial<T>): Promise<T>;
-  update(code: string, dto: Partial<T>): Promise<boolean>;
+  retrieve(id: IdType): Promise<T>;
+  update(id: IdType, dto: Partial<T>): Promise<boolean>;
+  delete_(id: IdType): Promise<boolean>;
 }
 
 /**
@@ -14,4 +17,4 @@ export interface IAuthCodeService<T extends IAuthCodeDto = IAuthCodeDto> {
   expires_at: string;
   is_used:    boolean | number; // 0 or 1
 }
-export type IAuthCodeDtoToWrite = Partial<Exclude<IAuthCodeDto, 'id' | 'created_at' | 'updated_at'>>;
+export type IAuthCodeDtoToWrite = Partial<Omit<IAuthCodeDto, 'id' | 'created_at' | 'updated_at'>>;

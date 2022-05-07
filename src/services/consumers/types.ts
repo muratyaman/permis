@@ -1,7 +1,11 @@
-import { IBaseDto, IdType } from '../../dto';
+import { IBaseDto, IdType, IObject } from '../../dto';
 
 export interface IConsumerService<T extends IConsumerDto = IConsumerDto> {
-  find(id: IdType): Promise<T>;
+  findMany(conditions: IObject): Promise<T[]>;
+  create(dto: Partial<T>): Promise<T>;
+  retrieve(id: IdType): Promise<T>;
+  update(id: IdType, dto: Partial<T>): Promise<boolean>;
+  delete_(id: IdType): Promise<boolean>;
 }
 
 /**
@@ -12,4 +16,4 @@ export interface IConsumerService<T extends IConsumerDto = IConsumerDto> {
   custom_id?: IdType | null;
   status:     string;
 }
-export type IConsumerDtoToWrite = Partial<Exclude<IConsumerDto, 'id' | 'created_at' | 'updated_at'>>;
+export type IConsumerDtoToWrite = Partial<Omit<IConsumerDto, 'id' | 'created_at' | 'updated_at'>>;

@@ -1,9 +1,13 @@
-import { IBaseDto, IdType } from '../../dto';
+import { IBaseDto, IdType, IObject } from '../../dto';
 
 export interface IClientService<T extends IClientDto = IClientDto> {
-  find(id: IdType): Promise<T>; // may throw error
-  verifyClientWithSecret(client: IClientDto, secret: string): Promise<boolean>; // may throw error
-  verifyClientWithRedirectUri(client: IClientDto, redirect_uri: string): Promise<boolean>; // may throw error
+  verifyClientWithSecret(client: IClientDto, secret: string): Promise<boolean>;
+  verifyClientWithRedirectUri(client: IClientDto, redirect_uri: string): Promise<boolean>;
+  findMany(conditions: IObject): Promise<T[]>;
+  create(dto: Partial<T>): Promise<T>;
+  retrieve(id: IdType): Promise<T>;
+  update(id: IdType, dto: Partial<T>): Promise<boolean>;
+  delete_(id: IdType): Promise<boolean>;
 }
 
 /**
@@ -23,4 +27,4 @@ export interface IClientService<T extends IClientDto = IClientDto> {
   client_type?:       string;
   status?:            string;
 }
-export type IClientDtoToWrite = Partial<Exclude<IClientDto, 'id' | 'created_at' | 'updated_at'>>;
+export type IClientDtoToWrite = Partial<Omit<IClientDto, 'id' | 'created_at' | 'updated_at'>>;
