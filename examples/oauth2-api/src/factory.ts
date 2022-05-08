@@ -4,8 +4,9 @@ import { readFileSync } from 'fs';
 import { createClient } from 'redis';
 import { makeRoutes } from './routes';
 import * as p from './permis';
+import { IFactory } from './types';
 
-export async function factory(penv = process.env) {
+export async function factory(penv = process.env): Promise<IFactory> {
   const server = express();
 
   server.use(bodyParser.urlencoded({ extended: false }));
@@ -28,15 +29,29 @@ export async function factory(penv = process.env) {
     },
   }, redis);
 
-  const identityRepo = new p.RepoWithRedis('oauth_identity', redis);
-  const identityRepo = new p.RepoWithRedis('oauth_identity', redis);
-  const identityRepo = new p.RepoWithRedis('oauth_identity', redis);
-  const identityRepo = new p.RepoWithRedis('oauth_identity', redis);
-  const identityRepo = new p.RepoWithRedis('oauth_identity', redis);
+  const authCodeRepo = new p.RepoWithRedis<p.IAuthCodeDto>('oauth2_auth_codes', redis);
+  const clientRepo   = new p.RepoWithRedis<p.IClientDto>  ('oauth2_clients',    redis);
+  const consentRespo = new p.RepoWithRedis<p.IConsentDto> ('oauth2_consents',   redis);
+  const consumerRepo = new p.RepoWithRedis<p.IConsumerDto>('oauth2_consumers',  redis);
+  const identityRepo = new p.RepoWithRedis<p.IIdentityDto>('oauth2_identity',   redis);
+  const scopeRepo    = new p.RepoWithRedis<p.IScopeDto>   ('oauth2_scopes',     redis);
+  const tokenRepo    = new p.RepoWithRedis<p.ITokenDto>   ('oauth2_tokens',     redis);
 
   const permis = new p.PermisService(conf);  
 
-  server.use(makeRoutes(permis, Router())._router);
+  const repos = {
+    authCodeRepo,
+    clientRepo,
+    consentRespo,
+    consumerRepo,
+    identityRepo,
+    scopeRepo,
+    tokenRepo,
+  };
 
-  return { conf, redis, server, permis, identityRepo };
+  const f = { conf, redis, server, permis, repos }
+
+  server.use(makeRoutes(f, Router())._router);
+
+  return f;
 }

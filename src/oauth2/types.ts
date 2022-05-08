@@ -2,6 +2,7 @@
  * Type definitions to help OAuth2 flow
  */
 
+import { IBaseDto } from '../dto';
 import { IJwtPayload } from '../types';
 
 export enum GrantTypeEnum {
@@ -45,7 +46,7 @@ export interface IRequestToStartAuthorization {
 export interface IResponseToStartAuthorization {
   request:      IRequestToStartAuthorization;
   redirect_uri: URL;
-  success?:     { consent_id: string; };
+  success?:     { consent_id: string; client: IBaseDto };
   error?:       IError;
 }
 

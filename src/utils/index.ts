@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import { addSeconds } from 'date-fns';
+import { RawDateType } from '../dto';
 
 export const ts = () => (new Date()).toISOString();
 
@@ -19,7 +20,7 @@ export function expiryForJwt(secsInFuture: number): string {
   return `${days}d`;
 }
 
-export function hasExpired(date: string): boolean {
+export function hasExpired(date: RawDateType): boolean {
   return new Date(date) < new Date();
 }
 

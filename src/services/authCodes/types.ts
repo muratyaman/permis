@@ -1,4 +1,4 @@
-import { IBaseDto, IdType, IObject } from '../../dto';
+import { IBaseDto, IdType, IObject, RawDateType } from '../../dto';
 
 export interface IAuthCodeService<T extends IAuthCodeDto = IAuthCodeDto> {
   findMany(conditions: IObject): Promise<T[]>;
@@ -14,7 +14,7 @@ export interface IAuthCodeService<T extends IAuthCodeDto = IAuthCodeDto> {
  */
  export interface IAuthCodeDto extends IBaseDto {
   consent_id: string;
-  expires_at: string;
+  expires_at: RawDateType;
   is_used:    boolean | number; // 0 or 1
 }
 export type IAuthCodeDtoToWrite = Partial<Omit<IAuthCodeDto, 'id' | 'created_at' | 'updated_at'>>;

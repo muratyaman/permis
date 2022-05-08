@@ -1,14 +1,17 @@
 import { Request, Response, Router } from 'express';
-import * as p from '../../permis';
+import { IFactory } from '../../types';
 
-export function makeRoutes(permis: p.PermisService, _router: Router) {
+export function makeRoutes(f: IFactory, _router: Router) {
+
+  const { permis } = f;
+  const { consentService, clientService, consumerService } = permis.conf;
 
   async function getConsent(req: Request, res: Response) {
     try {
       const { id = '' } = req.params;
-      const consent  = await permis.conf.consentService.retrieve(id);
-      const client   = await permis.conf.clientService.retrieve(consent.client_id);
-      const consumer = await permis.conf.consumerService.retrieve(client.consumer_id);
+      const consent  = await consentService.retrieve(id);
+      const client   = await clientService.retrieve(consent.client_id);
+      const consumer = await consumerService.retrieve(client.consumer_id);
       const data = {
         consumer: { name: consumer.name },
         client:   { name: client.name },
@@ -38,7 +41,7 @@ export function makeRoutes(permis: p.PermisService, _router: Router) {
       const { id = '' } = req.params;
       let { is_granted = 0, client_id = '', redirect_uri = '', scope = '', state = '' } = req.body;
 
-      const found = await permis.conf.consentService.retrieve(id); // throws error
+      const found = await consentService.retrieve(id); // throws error
       if (found.client_id !== client_id) {
         console.debug('client_id mismatch');
         return res.status(400).json({ error: 'Bad request' });
@@ -65,7 +68,7 @@ export function makeRoutes(permis: p.PermisService, _router: Router) {
       }
       // TODO: expires_at a future date
       const change = { user_id: String(user_id), is_granted: !!is_granted ? 1 : 0 };
-      const data = await permis.conf.consentService.update(id, change);
+      const data = await consentService.update(id, change);
       res.json({ data });
 
     } catch (err) {

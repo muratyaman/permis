@@ -14,7 +14,6 @@ export interface IScopeService<T extends IScopeDto = IScopeDto> {
  */
  export interface IScopeDto extends IBaseDto {
   // id like 'profile:read'
-  title?:       string | null;
   description?: string | null;
 }
 export type IScopeDtoToWrite = Partial<Omit<IScopeDto, 'created_at' | 'updated_at'>>;

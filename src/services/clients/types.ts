@@ -13,12 +13,13 @@ export interface IClientService<T extends IClientDto = IClientDto> {
 /**
  * App with credentials - belongs to Consumer
  */
- export interface IClientDto extends IBaseDto {
+export interface IClientDto extends IBaseDto {
+  // name: application name/description given by consumer
+
   consumer_id:        IdType;
   client_secret_hash: string;
   redirect_uris:      string; // use line-breaks to separate multiple URIs
 
-  name?:              string; // application name/description given by consumer
   grant_types?:       string; // use spaces to separate multiple grant types
 
   access_token_expiry_in_secs?:  number; // to override default setting

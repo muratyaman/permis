@@ -1,7 +1,7 @@
 import { Request, Response, Router } from 'express';
-import * as p from '../../permis';
+import { IFactory } from '../../types';
 
-export function makeRoutes(permis: p.PermisService, _router: Router) {
+export function makeRoutes(f: IFactory, _router: Router) {
 
   async function authenticate(req: Request, res: Response) {
     try {
@@ -14,7 +14,7 @@ export function makeRoutes(permis: p.PermisService, _router: Router) {
 
       token_type  = parts[0].toLowerCase();
       token       = parts[1];
-      const result = await permis.authenticate({ token, token_type });
+      const result = await f.permis.authenticate({ token, token_type });
 
       if (result.success) return res.json(result.success);
       return res.status(401).json(result.error);

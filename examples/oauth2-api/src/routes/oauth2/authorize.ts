@@ -3,8 +3,9 @@ import { readFileSync } from 'fs';
 import { compile } from 'handlebars';
 import { resolve } from 'path';
 import * as p from '../../permis';
+import { IFactory } from '../../types';
 
-export function makeRoutes(permis: p.PermisService, _router: Router) {
+export function makeRoutes(f: IFactory, _router: Router) {
 
   const authLandingPagePath     = resolve(__dirname, '..', '..', '..', 'static', 'oauth2', 'authorize', 'index.html.hbs');
   const authLandingPage         = readFileSync(authLandingPagePath).toString('utf-8');
@@ -13,7 +14,7 @@ export function makeRoutes(permis: p.PermisService, _router: Router) {
   async function startAuthorization(req: Request, res: Response) {
     try {
       const formData = Object.assign({}, req.query) as Partial<p.oauth2.IRequestToAuthorize>;
-      const result = await permis.authorize(formData);
+      const result = await f.permis.authorize(formData);
       const uri = result.redirect_uri ? result.redirect_uri.toString() : '';
 
       console.debug({ uri });
@@ -25,8 +26,8 @@ export function makeRoutes(permis: p.PermisService, _router: Router) {
           // next: redirect to IdP app, user should authenticate + update consent allow/deny
 
           // PREPARE context for template
-          const scopes = result.request.scope.split(' ');
-          const client = await permis.conf.clientService.find(result.request.client_id);
+          const scopes   = result.request.scope.split(' ');
+          const client   = await f.permis.conf.clientService.retrieve(result.request.client_id);
           const app_name = client.name ?? 'Application';
           const { consent_id } = result.success;
 
@@ -49,7 +50,7 @@ export function makeRoutes(permis: p.PermisService, _router: Router) {
   async function finishAuthorization(req: Request, res: Response) {
     try {
       const formData = Object.assign({}, req.body) as Partial<p.oauth2.IRequestToAuthorize>;
-      const result = await permis.authorize(formData);
+      const result = await f.permis.authorize(formData);
       const uri = result.redirect_uri ? result.redirect_uri.toString() : '';
 
       console.debug({ uri });

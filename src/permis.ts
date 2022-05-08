@@ -69,6 +69,7 @@ export class PermisService implements IPermisService {
 
       response.success = {
         consent_id: String(consent.id),
+        client,
       };
       response.redirect_uri.searchParams.append('consent_id', String(consent.id));
 
@@ -227,6 +228,9 @@ export class PermisService implements IPermisService {
 
     return response;
   }
+
+  // TODO
+  //async _createTokenByRefreshToken(request: oauth2.IRequestToCreateTokenByRefreshToken): Promise<oauth2.IResponseToCreateTokenByRefreshToken> {}
 
   async _createTokenByCredentials(request: oauth2.IRequestToCreateTokenByCredentials): Promise<oauth2.IResponseToCreateTokenByCredentials> {
     const response: oauth2.IResponseToCreateTokenByCredentials = { request };

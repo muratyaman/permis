@@ -1,4 +1,4 @@
-import { IBaseDto, IdType, IObject } from '../../dto';
+import { IBaseDto, IdType, IObject, RawBool, RawDateType } from '../../dto';
 
 export interface ITokenService<T extends ITokenDto = ITokenDto> {
   findMany(conditions: IObject): Promise<T[]>;
@@ -16,12 +16,12 @@ export interface ITokenService<T extends ITokenDto = ITokenDto> {
   token_type: string | 'bearer'; // e.g. 'Bearer'
 
   access_token:             string;
-  access_token_expires_at:  string;
+  access_token_expires_at:  RawDateType;
 
   refresh_token:            string;
-  refresh_token_expires_at: string;
+  refresh_token_expires_at: RawDateType;
 
   user_id: IdType;
-  scope:   string; // use space to separate multiple scopes
-  is_used: number; // change to 1 when refresh token is used
+  scope:   string;  // use space to separate multiple scopes
+  is_used: RawBool; // change to 1 when refresh token is used
 }

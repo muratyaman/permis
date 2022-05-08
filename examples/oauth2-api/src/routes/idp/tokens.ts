@@ -1,11 +1,12 @@
 import { Request, Response, Router } from 'express';
 import * as p from '../../permis';
+import { IFactory } from '../../types';
 
-export function makeRoutes(permis: p.PermisService, _router: Router) {
+export function makeRoutes(f: IFactory, _router: Router) {
 
   // localize
-  const idp = permis.conf.identityService;
-  const sec = permis.conf.securityService;
+  const idp = f.permis.conf.identityService;
+  const sec = f.permis.conf.securityService;
 
   // for user to sign in: create login/session token
   async function createToken(req: Request, res: Response) {
