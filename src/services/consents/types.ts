@@ -1,4 +1,4 @@
-import { IBaseDto, IdType, IObject, RawBool, RawDateType } from '../../dto';
+import { IBaseDto, IdType, IObject, RawDateType } from '../../dto';
 
 export interface IConsentService<T extends IConsentDto = IConsentDto> {
   findMany(conditions: IObject): Promise<T[]>;
@@ -18,7 +18,7 @@ export interface IConsentDto extends IBaseDto {
   state?:       string | null; // given by consumer usually for cross-referencing
 
   expires_at:   RawDateType;
-  user_id:      string | null; // fill in after approval or rejection
-  is_granted:   RawBool; // defaults to 0
+  user_id:      IdType | null; // fill in after approval or rejection
+  status:       string | 'PENDING' | 'ALLOWED' | 'REJECTED' | 'REVOKED';
 }
 export type IConsentDtoToWrite = Partial<Omit<IConsentDto, 'id' | 'created_at' | 'updated_at'>>;

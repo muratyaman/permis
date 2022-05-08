@@ -1,12 +1,9 @@
 import { IdType, IObject } from '../../dto';
-import { ErrAccessDenied } from '../../errors';
+import { ErrRecordNotFound } from '../../errors';
 import { RepoWithRedis } from '../../repos';
 import { ts, uuid } from '../../utils';
 import { ISecurityService } from '../security';
 import { IIdentityService, IIdentityDto } from './types';
-
-const errInvalidCredentials = 'Invalid credentials';
-const accessIssue = new ErrAccessDenied(errInvalidCredentials);
 
 export class IdentityServiceWithRedis implements IIdentityService<IIdentityDto> {
 
@@ -18,12 +15,13 @@ export class IdentityServiceWithRedis implements IIdentityService<IIdentityDto> 
 
   async findByUsername(username: string): Promise<IIdentityDto> {
     const rows = await this.repo.findMany({ username });
-    if (!rows || rows.length === 0) throw accessIssue;
+    if (!rows || rows.length === 0) throw new ErrRecordNotFound('User not found');
     return rows[0];
   }
 
   async create(dto: Partial<IIdentityDto>): Promise<IIdentityDto> {
     dto.id         = dto.id ?? uuid();
+    dto.status     = dto.status ?? 'ACTIVE';
     dto.created_at = dto.created_at ?? ts();
     dto.updated_at = dto.updated_at ?? ts();
     await this.repo.create(String(dto.id), dto);

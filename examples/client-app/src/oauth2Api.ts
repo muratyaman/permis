@@ -7,7 +7,7 @@ const redirect_uri = process.env.REACT_APP_REDIRECT_URI ?? 'http://localhost:400
 const _client = axios.create({ baseURL });
 
 export interface ITokenCreateInput {
-  grant_type:     'code' | 'credentials';
+  grant_type:     'authorization_code';
   client_id:      string;
   redirect_uri:   string;
   scope:          string;

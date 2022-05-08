@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { assertString, expiryForJwt } from '../../utils';
 import { IJwtPayload } from '../../types';
-import { ISecurityService, IUserAndPass } from './types';
+import { ISecurityService, IUserCredentials } from './types';
 
 const ALGO_RS256 = 'RS256';
 const BASE64     = 'base64';
@@ -52,11 +52,11 @@ export class SecurityServiceDefault implements ISecurityService<IJwtPayload> {
     return decoded as unknown as IJwtPayload; // pretend
   }
 
-  makeBasicAuthToken(input: IUserAndPass): string {
+  makeBasicAuthToken(input: IUserCredentials): string {
     return Buffer.from(`${input.username}:${input.password}`).toString(BASE64);
   }
 
-  verifyBasicAuth(token: string): IUserAndPass {
+  verifyBasicAuth(token: string): IUserCredentials {
     const tokenB64Decoded = Buffer.from(token, BASE64).toString(UTF8);
     const [username, password] = tokenB64Decoded.split(SEP_AUTH);
     assertString(username, errInvalidBasicAuth);

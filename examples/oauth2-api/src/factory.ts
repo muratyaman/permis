@@ -19,34 +19,24 @@ export async function factory(penv = process.env): Promise<IFactory> {
   await redis.connect();
 
   const conf = new p.PermisConfigWithRedis({
-    options: {
-      logLevel:   'debug',
-      privateKey: readFileSync('privateKey.pem'),
-      publicKey:  readFileSync('publicKey.pem'),
-      selfUrl:    'http://localhost:8000',
-      //idpAppUrl: 'http://localhost:3000/authorize',
-      //idpApiUrl: 'http://localhost:3001',
-    },
+    logLevel:   'debug',
+    privateKey: readFileSync('privateKey.pem'),
+    publicKey:  readFileSync('publicKey.pem'),
+    selfHosted: true,
+    //idpAppUrl: 'http://localhost:3000/authorize',
+    //idpApiUrl: 'http://localhost:3001',
   }, redis);
-
-  const authCodeRepo = new p.RepoWithRedis<p.IAuthCodeDto>('oauth2_auth_codes', redis);
-  const clientRepo   = new p.RepoWithRedis<p.IClientDto>  ('oauth2_clients',    redis);
-  const consentRespo = new p.RepoWithRedis<p.IConsentDto> ('oauth2_consents',   redis);
-  const consumerRepo = new p.RepoWithRedis<p.IConsumerDto>('oauth2_consumers',  redis);
-  const identityRepo = new p.RepoWithRedis<p.IIdentityDto>('oauth2_identity',   redis);
-  const scopeRepo    = new p.RepoWithRedis<p.IScopeDto>   ('oauth2_scopes',     redis);
-  const tokenRepo    = new p.RepoWithRedis<p.ITokenDto>   ('oauth2_tokens',     redis);
 
   const permis = new p.PermisService(conf);  
 
   const repos = {
-    authCodeRepo,
-    clientRepo,
-    consentRespo,
-    consumerRepo,
-    identityRepo,
-    scopeRepo,
-    tokenRepo,
+    authCodeRepo: conf.authCodeRepo,
+    clientRepo:   conf.clientRepo,
+    consentRespo: conf.consentRepo,
+    consumerRepo: conf.consumerRepo,
+    identityRepo: conf.identityRepo,
+    scopeRepo:    conf.scopeRepo,
+    tokenRepo:    conf.tokenRepo,
   };
 
   const f = { conf, redis, server, permis, repos }

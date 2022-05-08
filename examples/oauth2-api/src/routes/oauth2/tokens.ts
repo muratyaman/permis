@@ -1,10 +1,11 @@
 import { Request, Response, Router } from 'express';
+import { sendError } from '../../errors';
 import * as p from '../../permis';
 import { IFactory } from '../../types';
 
 export function makeRoutes(f: IFactory, _router: Router) {
 
-  async function createToken(req: Request, res: Response) {
+  async function create(req: Request, res: Response) {
     try {
       const formData = Object.assign({}, req.query) as Partial<p.oauth2.IRequestToCreateToken>;
       const result = await f.permis.createToken(formData);
@@ -13,13 +14,15 @@ export function makeRoutes(f: IFactory, _router: Router) {
       } else if (result.error) {
         res.json(result.error); // TODO: status
       }
+
     } catch (err) {
+
       console.warn(err);
-      res.status(500).json({ error: 'Server error' });
+      sendError(req, res, err);
     }
   }
 
-  _router.post('/', createToken);
+  _router.post('/', create);
 
-  return { _router, createToken };
+  return { _router, create };
 }

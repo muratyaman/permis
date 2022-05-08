@@ -8,7 +8,7 @@ export class ScopeServiceWithRedis implements IScopeService<IScopeDto> {
 
   constructor(public readonly repo: RepoWithRedis<IScopeDto>) {}
 
-  async verifyScopes(scopes: string[], _client_id: IdType): Promise<boolean> {
+  async verifyScopes(scopes: string[], _client_id?: IdType): Promise<boolean> {
     const rows = await this.repo.findMany({});
     const ids = rows.map(r => r.id);
     for (const scope of scopes) {

@@ -1,4 +1,5 @@
 import { Request, Response, Router } from 'express';
+import { sendError } from '../../errors';
 import { IFactory } from '../../types';
 
 export function makeRoutes(f: IFactory, _router: Router) {
@@ -6,7 +7,7 @@ export function makeRoutes(f: IFactory, _router: Router) {
   const { permis } = f;
   const { consentService, clientService, consumerService } = permis.conf;
 
-  async function getConsent(req: Request, res: Response) {
+  async function retrieve(req: Request, res: Response) {
     try {
       const { id = '' } = req.params;
       const consent  = await consentService.retrieve(id);
@@ -18,12 +19,14 @@ export function makeRoutes(f: IFactory, _router: Router) {
         scopes:   consent.scope.split(' ').map(code => ({ code, description: code.replace(':', ' ') })),
       };
       res.json({ data });
+
     } catch (err) {
-      res.json({ error: 'Failed to get consent details' });
+
+      sendError(req, res, err);
     }
   }
 
-  async function updateConsent(req: Request, res: Response) {
+  async function update(req: Request, res: Response) {
     try {
       let token = '', token_type = 'bearer';
       const headerToken = req.get('Authorization');
@@ -73,12 +76,12 @@ export function makeRoutes(f: IFactory, _router: Router) {
 
     } catch (err) {
 
-      res.json({ error: err instanceof Error ? err.message : 'Failed to update consent' }); // TODO: status
+      sendError(req, res, err);
     }
   }
 
-  _router.get  ('/:id', getConsent);
-  _router.patch('/:id', updateConsent);
+  _router.get  ('/:id', retrieve);
+  _router.patch('/:id', update);
 
-  return { _router, getConsent, updateConsent };
+  return { _router, retrieve, update };
 }

@@ -1,4 +1,5 @@
 import { Request, Response, Router } from 'express';
+import { sendError } from '../../errors';
 import { IFactory } from '../../types';
 
 export function makeRoutes(f: IFactory, _router: Router) {
@@ -22,7 +23,7 @@ export function makeRoutes(f: IFactory, _router: Router) {
     } catch (err) {
 
       console.warn(err);
-      res.status(500).json({ error: 'Server error' });
+      sendError(req, res, err);
     }
   }
 

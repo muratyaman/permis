@@ -26,6 +26,6 @@ export interface IClientDto extends IBaseDto {
   refresh_token_expiry_in_secs?: number; // to override default setting
 
   client_type?:       string;
-  status?:            string;
+  status?:            string | 'ACTIVE' | 'INACTIVE';
 }
 export type IClientDtoToWrite = Partial<Omit<IClientDto, 'id' | 'created_at' | 'updated_at'>>;

@@ -1,6 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { sendError } from '../../errors';
 import * as p from '../../permis';
+import { ErrBadRequest, PermisError } from '../../permis';
 import { IFactory } from '../../types';
 
 export function makeRoutes(f: IFactory, _router: Router) {
@@ -9,12 +10,15 @@ export function makeRoutes(f: IFactory, _router: Router) {
   const idp = f.permis.conf.identityService;
   const sec = f.permis.conf.securityService;
 
-  // for user to sign in: create login/session token
-  async function create(req: Request, res: Response) {
+  async function signUp(req: Request, res: Response) {
     try {
-      let { username = '', password = '' } = req.body;
-      username = p.assertString(username, 'username required');
-      password = p.assertString(password, 'password required');
+      const username         = p.objectPropAsString(req.body, 'username', '');
+      const password         = p.objectPropAsString(req.body, 'password', '');
+      const password_confirm = p.objectPropAsString(req.body, 'password_confirm', '');
+      p.assertString(username, 'username required');
+      p.assertString(password, 'password required');
+      p.assertString(password_confirm, 'password confirmation required');
+      if (password !== password_confirm) throw new ErrBadRequest('')
 
       const user = await idp.findByUsername(username);
       const verified = await sec.verifyText(password, user.password_hash);
@@ -36,24 +40,7 @@ export function makeRoutes(f: IFactory, _router: Router) {
     }
   }
 
-  // to verify login/session token
-  async function verify(req: Request, res: Response) {
-    try {
-      const bearerToken = req.get('authorization');
-      const [_kind, token] = String(bearerToken).split(' ');
+  _router.post('/', signUp);
 
-      const decoded = await sec.verifyJwt(token);
-      res.json({ data: decoded });
-
-    } catch (err) {
-
-      console.warn(err);
-      sendError(req, res, err);
-    }
-  }
-
-  _router.post('/', create);
-  _router.get ('/', verify);
-
-  return { _router, create, verify };
+  return { _router, signUp };
 }

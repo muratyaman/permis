@@ -18,26 +18,33 @@ export class PermisService implements IPermisService {
 
   constructor(public conf: IPermisConfiguration) {}
 
+  // proxy method for convenience
   authorize(req: Partial<oauth2.IRequestToAuthorize>): Promise<oauth2.IResponseToAuthorize> {
+    let err: unknown | null = null, reqToFinish: oauth2.IRequestToFinishAuthorization | null = null;
     try {
-      const reqToFinish = oauth2.validateRequestToFinishAuthorization(req); // throws error
-      return this._authorizeFinish(reqToFinish);
+      reqToFinish = oauth2.validateRequestToFinishAuthorization(req); // throws error
     } catch (err1) {
-      try {
-        const reqToStart = oauth2.validateRequestToStartAuthorization(req); // throws error
-        return this._authorizeStart(reqToStart);
-      } catch (err2) {
-        throw err2;
-      }
+      err = err1;
     }
+    if (reqToFinish) return this.authorizeFinish(reqToFinish);
+
+    let reqToStart: oauth2.IRequestToStartAuthorization | null = null;
+    try {
+      reqToStart = oauth2.validateRequestToStartAuthorization(req); // throws error
+    } catch (err2) {
+      err = err2;
+    }
+    if (!reqToStart) throw err;
+    return this.authorizeStart(reqToStart);
   }
 
-  _idpAppUrl() {
-    const url = assertString(this.conf.options.idpAppUrl ?? this.conf.options.selfUrl ?? '', 'idpAppUrl or selfUrl is required');
+  _idpAppUrl(): URL | null {
+    if (this.conf.options?.selfHosted ?? false) return null;
+    const url = assertString(this.conf.options.idpAppUrl ?? '', 'idpAppUrl is required if not selfHosted');
     return new URL(url);
   }
 
-  async _authorizeStart(request: oauth2.IRequestToStartAuthorization): Promise<oauth2.IResponseToStartAuthorization> {
+  async authorizeStart(request: oauth2.IRequestToStartAuthorization): Promise<oauth2.IResponseToStartAuthorization> {
     const response: oauth2.IResponseToStartAuthorization = {
       request,
       redirect_uri: this._idpAppUrl(),
@@ -54,11 +61,13 @@ export class PermisService implements IPermisService {
       if (!scopesVerified) throw new ErrInvalidScope();
 
       // prepare redirect URI for IdP App to authenticate and give consent
-      response.redirect_uri.searchParams.append('client_id',    request.client_id);
-      response.redirect_uri.searchParams.append('redirect_uri', request.redirect_uri);
-      response.redirect_uri.searchParams.append('scope',        request.scope);
-      if (request.state) response.redirect_uri.searchParams.append('state', request.state);
-      if (request.nonce) response.redirect_uri.searchParams.append('nonce', request.nonce);
+      if (response.redirect_uri) {
+        response.redirect_uri.searchParams.append('client_id',    request.client_id);
+        response.redirect_uri.searchParams.append('redirect_uri', request.redirect_uri);
+        response.redirect_uri.searchParams.append('scope',        request.scope);
+        if (request.state) response.redirect_uri.searchParams.append('state', request.state);
+        if (request.nonce) response.redirect_uri.searchParams.append('nonce', request.nonce);
+      }
 
       const consent = await this.conf.consentService.create({
         client_id:    client.id,
@@ -71,7 +80,7 @@ export class PermisService implements IPermisService {
         consent_id: String(consent.id),
         client,
       };
-      response.redirect_uri.searchParams.append('consent_id', String(consent.id));
+      if (response.redirect_uri) response.redirect_uri.searchParams.append('consent_id', String(consent.id));
 
     } catch (err) {
       response.error = {
@@ -107,7 +116,7 @@ export class PermisService implements IPermisService {
     return allow === 'true';
   }
 
-  async _authorizeFinish(request: oauth2.IRequestToFinishAuthorization): Promise<oauth2.IResponseToFinishAuthorization> {
+  async authorizeFinish(request: oauth2.IRequestToFinishAuthorization): Promise<oauth2.IResponseToFinishAuthorization> {
     // NOTE: the server should only redirect the user to the redirect URL if the redirect URL has been registered!
     const response: oauth2.IResponseToFinishAuthorization = { request };
     try {
@@ -118,10 +127,9 @@ export class PermisService implements IPermisService {
       if (!clientAndUriVerified) throw new ErrUnauthorizedClient();
 
       // prepare consumer's redirect URI
-      const redirect_uri = new URL(request.redirect_uri);
-      if (request.state) redirect_uri.searchParams.append('state', request.state);
-      if (request.nonce) redirect_uri.searchParams.append('nonce', request.nonce);
-      response.redirect_uri = redirect_uri;
+      response.redirect_uri = new URL(request.redirect_uri);
+      if (request.state) response.redirect_uri.searchParams.append('state', request.state);
+      if (request.nonce) response.redirect_uri.searchParams.append('nonce', request.nonce);
 
       const isAllowed = this._isAllowed(request.allow);
 
@@ -154,21 +162,27 @@ export class PermisService implements IPermisService {
     return response;
   }
 
+  // proxy method for convenience
   async createToken(req: Partial<oauth2.IRequestToCreateToken>): Promise<oauth2.IResponseToCreateToken> {
+    let err: unknown | null = null, reqByCode: oauth2.IRequestToCreateTokenByAuthCode | null = null;
     try {
-      const reqByCode = oauth2.validateRequestToCreateTokenByAuthCode(req); // throws error
-      return this._createTokenByAuthCode(reqByCode);
+      reqByCode = oauth2.validateRequestToCreateTokenByAuthCode(req); // throws error
     } catch (err1) {
-      try {
-        const reqByCredentials = oauth2.validateRequestToCreateTokenByCredentials(req); // throws error
-        return this._createTokenByCredentials(reqByCredentials);
-      } catch (err2) {
-        throw err2;
-      }
+      err = err1;
     }
+    if (reqByCode) return this.createTokenByAuthCode(reqByCode);
+
+    let reqByCredentials: oauth2.IRequestToCreateTokenByCredentials | null = null;
+    try {
+      reqByCredentials = oauth2.validateRequestToCreateTokenByCredentials(req); // throws error
+    } catch (err2) {
+      err = err2;
+    }
+    if (!reqByCredentials) throw err;
+    return this.createTokenByCredentials(reqByCredentials);
   }
 
-  async _createTokenByAuthCode(request: oauth2.IRequestToCreateTokenByAuthCode): Promise<oauth2.IResponseToCreateTokenByAuthCode> {
+  async createTokenByAuthCode(request: oauth2.IRequestToCreateTokenByAuthCode): Promise<oauth2.IResponseToCreateTokenByAuthCode> {
     const response: oauth2.IResponseToCreateTokenByAuthCode = { request };
     try {
       const client = await this.conf.clientService.retrieve(request.client_id);
@@ -178,13 +192,13 @@ export class PermisService implements IPermisService {
       if (!clientAndUriVerified) throw new ErrUnauthorizedClient();
 
       const authCode = await this.conf.authCodeService.findByCode(request.code);
-      if (authCode.is_used) throw new ErrAccessDenied();
+      if (authCode.status !== 'PENDING') throw new ErrAccessDenied();
       if (hasExpired(authCode.expires_at)) throw new ErrAccessDenied();
 
       const consent = await this.conf.consentService.retrieve(authCode.consent_id);
       if (!consent.is_granted) throw new ErrAccessDenied();
 
-      authCode.is_used = 1;
+      authCode.status = 'USED';
       const authCodeUpdated = await this.conf.authCodeService.update(request.code, authCode);
       if (!authCodeUpdated) throw new ErrServerError();
 
@@ -232,7 +246,7 @@ export class PermisService implements IPermisService {
   // TODO
   //async _createTokenByRefreshToken(request: oauth2.IRequestToCreateTokenByRefreshToken): Promise<oauth2.IResponseToCreateTokenByRefreshToken> {}
 
-  async _createTokenByCredentials(request: oauth2.IRequestToCreateTokenByCredentials): Promise<oauth2.IResponseToCreateTokenByCredentials> {
+  async createTokenByCredentials(request: oauth2.IRequestToCreateTokenByCredentials): Promise<oauth2.IResponseToCreateTokenByCredentials> {
     const response: oauth2.IResponseToCreateTokenByCredentials = { request };
     try {
       const client = await this.conf.clientService.retrieve(request.client_id);

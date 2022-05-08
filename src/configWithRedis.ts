@@ -1,6 +1,3 @@
-import axios from 'axios';
-import { existsSync, readFileSync } from 'fs';
-import { resolve } from 'path';
 import * as C from './constants';
 import { RedisClient, RepoWithRedis } from './repos';
 import * as s from './services';
@@ -12,6 +9,15 @@ export class PermisConfigWithRedis implements IPermisConfiguration {
   options: IPermisOptions;
 
   // logger?: ...
+
+  public readonly authCodeRepo: RepoWithRedis<s.IAuthCodeDto>;
+  public readonly clientRepo:   RepoWithRedis<s.IClientDto>;
+  public readonly consentRepo:  RepoWithRedis<s.IConsentDto>;
+  public readonly consumerRepo: RepoWithRedis<s.IConsumerDto>;
+  public readonly identityRepo: RepoWithRedis<s.IIdentityDto>;
+  public readonly scopeRepo:    RepoWithRedis<s.IScopeDto>;
+  public readonly tokenRepo:    RepoWithRedis<s.ITokenDto>;
+
   securityService: s.ISecurityService;
   identityService: s.IIdentityService<IIdentityDto>;
 
@@ -22,38 +28,54 @@ export class PermisConfigWithRedis implements IPermisConfiguration {
   scopeService:    s.IScopeService<s.IScopeDto>;
   tokenService:    s.ITokenService<s.ITokenDto>;
 
-  constructor(conf: Partial<IPermisConfiguration>, redis: RedisClient) {
-    let   selfUrl   = conf?.options?.selfUrl ?? '';
-    const idpAppUrl = conf?.options?.idpAppUrl ?? '';
-    const idpApiUrl = conf?.options?.idpAppUrl ?? '';
-    if (!idpAppUrl && !idpApiUrl) {
-      selfUrl = assertString(selfUrl, 'selfUrl is required when idpAppUrl and idpApiUrl are not set');
+  constructor(options: Partial<IPermisOptions>, redis: RedisClient) {
+    const {
+      idpAppUrl                 = '',
+      idpApiUrl                 = '',
+      selfHosted                = true,
+      logLevel                  = 'warn',
+      allowEmptyState           = false,
+      authCodeExpiresInSecs     = C.defaultAuthCodeExpiryInSeconds,
+      accessTokenExpiresInSecs  = C.defaultAccessTokenExpiryInSeconds,
+      refreshTokenExpiresInSecs = C.defaultRefreshTokenExpiryInSeconds,
+    } = options;
+
+    if (!selfHosted && !idpAppUrl && !idpApiUrl) {
+      assertString('', 'selfHosted is required when idpAppUrl and idpApiUrl are not set');
     }
 
-    const privateKey = assertBuffer(conf?.options?.privateKey, 'Private key missing');
-    const publicKey  = assertBuffer(conf?.options?.publicKey, 'Public key missing');
+    const privateKey = assertBuffer(options?.privateKey, 'Private key missing');
+    const publicKey  = assertBuffer(options?.publicKey, 'Public key missing');
 
     this.options = {
-      selfUrl,
+      selfHosted,
       idpAppUrl,
       idpApiUrl,
-      logLevel:                  conf?.options?.logLevel ?? 'warn',
-      allowEmptyState:           conf?.options?.allowEmptyState ?? false,
-      authCodeExpiresInSecs:     conf?.options?.authCodeExpiresInSecs ?? C.defaultAuthCodeExpiryInSeconds,
-      accessTokenExpiresInSecs:  conf?.options?.accessTokenExpiresInSecs ?? C.defaultAccessTokenExpiryInSeconds,
-      refreshTokenExpiresInSecs: conf?.options?.refreshTokenExpiresInSecs ?? C.defaultRefreshTokenExpiryInSeconds,
+      logLevel,
+      allowEmptyState,
+      authCodeExpiresInSecs,
+      accessTokenExpiresInSecs,
+      refreshTokenExpiresInSecs,
       privateKey,
       publicKey,
     };
 
     this.securityService = new s.SecurityServiceDefault(privateKey, publicKey);
 
-    this.authCodeService = new s.AuthCodeServiceWithRedis(new RepoWithRedis<s.IAuthCodeDto>('oauth2_auth_codes', redis));
-    this.clientService   = new s.ClientServiceWithRedis  (new RepoWithRedis<s.IClientDto>  ('oauth2_clients',    redis), this.securityService);
-    this.consentService  = new s.ConsentServiceWithRedis (new RepoWithRedis<s.IConsentDto> ('oauth2_consents',   redis));
-    this.consumerService = new s.ConsumerServiceWithRedis(new RepoWithRedis<s.IConsumerDto>('oauth2_consumers',  redis));
-    this.identityService = new s.IdentityServiceWithRedis(new RepoWithRedis<s.IIdentityDto>('oauth2_identity',   redis), this.securityService);
-    this.scopeService    = new s.ScopeServiceWithRedis   (new RepoWithRedis<s.IScopeDto>   ('oauth2_scopes',     redis));
-    this.tokenService    = new s.TokenServiceWithRedis   (new RepoWithRedis<s.ITokenDto>   ('oauth2_tokens',     redis), this.securityService);
+    this.authCodeRepo = new RepoWithRedis<s.IAuthCodeDto>('oauth2_auth_codes', redis);
+    this.clientRepo   = new RepoWithRedis<s.IClientDto>  ('oauth2_clients',    redis);
+    this.consentRepo  = new RepoWithRedis<s.IConsentDto> ('oauth2_consents',   redis);
+    this.consumerRepo = new RepoWithRedis<s.IConsumerDto>('oauth2_consumers',  redis);
+    this.identityRepo = new RepoWithRedis<s.IIdentityDto>('oauth2_identity',   redis);
+    this.scopeRepo    = new RepoWithRedis<s.IScopeDto>   ('oauth2_scopes',     redis);
+    this.tokenRepo    = new RepoWithRedis<s.ITokenDto>   ('oauth2_tokens',     redis);
+
+    this.authCodeService = new s.AuthCodeServiceWithRedis(this.authCodeRepo, this.securityService);
+    this.clientService   = new s.ClientServiceWithRedis  (this.clientRepo, this.securityService);
+    this.consentService  = new s.ConsentServiceWithRedis (this.consentRepo);
+    this.consumerService = new s.ConsumerServiceWithRedis(this.consumerRepo);
+    this.identityService = new s.IdentityServiceWithRedis(this.identityRepo, this.securityService);
+    this.scopeService    = new s.ScopeServiceWithRedis   (this.scopeRepo);
+    this.tokenService    = new s.TokenServiceWithRedis   (this.tokenRepo, this.securityService);
   }
 }

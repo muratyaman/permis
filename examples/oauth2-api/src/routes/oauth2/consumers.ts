@@ -1,22 +1,39 @@
 import { Request, Response, Router } from 'express';
+import { sendError } from '../../errors';
+import { IConsumerDtoToWrite } from '../../permis';
 import { IFactory } from '../../types';
 
 export function makeRoutes(f: IFactory, _router: Router) {
 
-  async function getConsumer(req: Request, res: Response) {
+  const service = f.permis.conf.consumerService;
+
+  async function create(req: Request, res: Response) {
+    try {
+      const input = req.body as IConsumerDtoToWrite; // TODO: validate
+      const data = await service.create(input);
+      res.json({ data });
+
+    } catch (err) {
+
+      sendError(req, res, err);
+    }
+  }
+
+  async function retrieve(req: Request, res: Response) {
     try {
       const { id = '' } = req.params;
-      const data = await f.permis.conf.consumerService.retrieve(id);
+      const data = await service.retrieve(id);
       res.json({ data });
 
     } catch (err) {
 
       console.warn(err);
-      res.json({ error: 'Failed to get consumer details' }); // TODO: status
+      sendError(req, res, err);
     }
   }
 
-  _router.get('/:id', getConsumer);
+  _router.post('/',    create);
+  _router.get ('/:id', retrieve);
 
-  return { _router, getConsumer };
+  return { _router, create, retrieve };
 }

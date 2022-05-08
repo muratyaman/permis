@@ -73,11 +73,11 @@ export async function makeServer(penv = process.env) {
   }
 
   async function signIn(req: Request, res: Response) {
-    const username = req.body.username ?? '';
-    const password = req.body.password ?? '';
     try {
+      const username = req.body.username ?? '';
+      const password = req.body.password ?? '';
       const user = await verifyUser(username, password);
-      const token = await generateJwt(user.id);
+      const token = await generateJwt(String(user.id));
       const data = { user_id: user.id, username, token };
       res.json({ data });
     } catch (err) {

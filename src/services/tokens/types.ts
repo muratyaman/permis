@@ -1,4 +1,4 @@
-import { IBaseDto, IdType, IObject, RawBool, RawDateType } from '../../dto';
+import { IBaseDto, IdType, IObject, RawDateType } from '../../dto';
 
 export interface ITokenService<T extends ITokenDto = ITokenDto> {
   findMany(conditions: IObject): Promise<T[]>;
@@ -11,7 +11,7 @@ export interface ITokenService<T extends ITokenDto = ITokenDto> {
 /**
  * Token model to be created when an auth code is used
  */
- export interface ITokenDto extends IBaseDto {
+export interface ITokenDto extends IBaseDto {
   client_id:  IdType;
   token_type: string | 'bearer'; // e.g. 'Bearer'
 
@@ -23,5 +23,5 @@ export interface ITokenService<T extends ITokenDto = ITokenDto> {
 
   user_id: IdType;
   scope:   string;  // use space to separate multiple scopes
-  is_used: RawBool; // change to 1 when refresh token is used
+  status:  string | 'ACTIVE' | 'INACTIVE' | 'EXPIRED'; // change to 'INACTIVE' when refresh token is used
 }

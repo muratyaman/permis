@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import { addSeconds } from 'date-fns';
-import { RawDateType } from '../dto';
+import { IObject, RawDateType } from '../dto';
+import { ErrInvalidRequest } from '../errors';
 
 export const ts = () => (new Date()).toISOString();
 
@@ -25,11 +26,15 @@ export function hasExpired(date: RawDateType): boolean {
 }
 
 export function assertBuffer(b: Buffer | undefined | null, errMsg = 'Buffer expected'): Buffer {
-  if (b === undefined || b === null) throw new Error(errMsg);
+  if (b === undefined || b === null) throw new ErrInvalidRequest(errMsg);
   return b;
 }
 
 export function assertString(s: string | undefined | null, errMsg = 'String expected'): string {
-  if (s === undefined || s === null || s.trim() === '') throw new Error(errMsg);
+  if (s === undefined || s === null || s.trim() === '') throw new ErrInvalidRequest(errMsg);
   return s;
+}
+
+export function objectPropAsString(obj: IObject, prop: string, defaultVal = ''): string {
+  return !!obj && (typeof obj === 'object') && (prop in obj) && (typeof obj[prop] === 'string') ? String(obj[prop]) : defaultVal;
 }

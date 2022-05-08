@@ -13,6 +13,7 @@ export interface IIdentityDto extends IBaseDto {
   username:      string; // unique
   password_hash: string;
   email?:        string;
+  status:        string;
 }
 export type IIdentityDtoToWrite = Partial<Omit<IIdentityDto, 'id' | 'created_at' | 'updated_at'>>;
 export type IIdentityDtoPublic  = Omit<IIdentityDto, 'password_hash'>;

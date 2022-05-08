@@ -20,7 +20,7 @@ export class ConsentServiceWithRedis implements IConsentService<IConsentDto> {
       scope:        dto.scope ?? '',
       state:        dto.state ?? '',
       user_id:      dto.user_id ?? null,
-      is_granted:   0,
+      status:       'PENDING',
       expires_at:   dto.expires_at ?? '',
       created_at:   ts(),
       updated_at:   ts(),
@@ -36,7 +36,7 @@ export class ConsentServiceWithRedis implements IConsentService<IConsentDto> {
   async update(id: IdType, dto: Partial<IConsentDto>): Promise<boolean> {
     return this.repo.update(String(id), {
       user_id:    dto.user_id ?? null,
-      is_granted: dto.is_granted ?? 0,
+      status:     dto.status ?? '',
       updated_at: ts(),
     });
   }

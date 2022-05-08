@@ -12,7 +12,7 @@ export interface IScopeService<T extends IScopeDto = IScopeDto> {
 /**
  * Scope/Permission model
  */
- export interface IScopeDto extends IBaseDto {
+export interface IScopeDto extends IBaseDto {
   // id like 'profile:read'
   description?: string | null;
 }

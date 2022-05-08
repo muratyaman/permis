@@ -2,6 +2,7 @@ import { Request, Response, Router } from 'express';
 import { readFileSync } from 'fs';
 import { compile } from 'handlebars';
 import { resolve } from 'path';
+import { sendError } from '../../errors';
 import * as p from '../../permis';
 import { IFactory } from '../../types';
 
@@ -13,8 +14,16 @@ export function makeRoutes(f: IFactory, _router: Router) {
 
   async function startAuthorization(req: Request, res: Response) {
     try {
-      const formData = Object.assign({}, req.query) as Partial<p.oauth2.IRequestToAuthorize>;
-      const result = await f.permis.authorize(formData);
+      p.objectPropAsString(req.query, '')
+      const formData = Object.assign({}, req.query);
+      
+      const result = await f.permis.authorizeStart({
+        response_type: p.objectPropAsString(formData, 'response_type', 'code') as p.oauth2.ResponseType,
+        client_id:     p.objectPropAsString(formData, 'client_id', ''),
+        redirect_uri:  p.objectPropAsString(formData, 'redirect_uri', ''),
+        scope:         p.objectPropAsString(formData, 'scope', ''),
+        state:         p.objectPropAsString(formData, 'state', ''),
+      });
       const uri = result.redirect_uri ? result.redirect_uri.toString() : '';
 
       console.debug({ uri });
@@ -24,15 +33,17 @@ export function makeRoutes(f: IFactory, _router: Router) {
         if ('consent_id' in result.success) {
           console.debug('step to START consent user journey...');
           // next: redirect to IdP app, user should authenticate + update consent allow/deny
+          if (f.permis.conf.options.selfHosted) {
+            // PREPARE context for template
+            const scopes   = result.request.scope.split(' ');
+            const client   = await f.permis.conf.clientService.retrieve(result.request.client_id);
+            const app_name = client.name ?? 'Application';
+            const { consent_id } = result.success;
+            const $ctx = { app_name, scopes, consent_id };
 
-          // PREPARE context for template
-          const scopes   = result.request.scope.split(' ');
-          const client   = await f.permis.conf.clientService.retrieve(result.request.client_id);
-          const app_name = client.name ?? 'Application';
-          const { consent_id } = result.success;
-
-          const html = authLandingPageCompiled({ app_name, scopes, consent_id });
-          return res.send(html);
+            const html = authLandingPageCompiled({ $ctx });
+            return res.send(html);
+          }
         }
       } else {
         console.warn(result.error);
@@ -43,7 +54,7 @@ export function makeRoutes(f: IFactory, _router: Router) {
 
     } catch (err) {
 
-      res.status(500).json({ error: err instanceof Error ? err.message : 'Server error' });
+      sendError(req, res, err);
     }
   }
 
@@ -70,7 +81,7 @@ export function makeRoutes(f: IFactory, _router: Router) {
 
     } catch (err) {
 
-      res.status(500).json({ error: err instanceof Error ? err.message : 'Server error' });
+      sendError(req, res, err);
     }
   }
 

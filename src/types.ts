@@ -10,11 +10,11 @@ import { ISecurityService } from './services/security';
 import { ITokenDto, ITokenService } from './services/tokens';
 
 export interface IPermisOptions {
-  idpAppUrl?: string; // default '' ==> means self is host
-  idpApiUrl?: string; // default '' ==> means self is host
-  selfUrl?:   string; // required if idpAppUrl and idpApiUrl are missing
-  privateKey: Buffer;
-  publicKey:  Buffer;
+  idpAppUrl?:  string;  // default '' ==> means self is host
+  idpApiUrl?:  string;  // default '' ==> means self is host
+  selfHosted?: boolean; // required if idpAppUrl and idpApiUrl are missing
+  privateKey:  Buffer;
+  publicKey:   Buffer;
 
   logLevel?: 'debug' | 'info' | 'warn' | 'error';
   allowEmptyState?:           boolean;
@@ -65,8 +65,14 @@ export interface IPermisService<
     TTokenModel
   >;
   authorize(req: Partial<oauth2.IRequestToAuthorize>): Promise<oauth2.IResponseToAuthorize>;
+  authorizeStart(req: Partial<oauth2.IRequestToStartAuthorization>): Promise<oauth2.IResponseToStartAuthorization>;
+  authorizeFinish(req: Partial<oauth2.IRequestToFinishAuthorization>): Promise<oauth2.IResponseToFinishAuthorization>;
+
   authenticate(req: Partial<oauth2.IRequestToAuthenticate>): Promise<oauth2.IResponseToAuthenticate>;
+
   createToken(req: Partial<oauth2.IRequestToCreateToken>): Promise<oauth2.IResponseToCreateToken>;
+  createTokenByAuthCode(req: Partial<oauth2.IRequestToCreateTokenByAuthCode>): Promise<oauth2.IResponseToCreateTokenByAuthCode>;
+  createTokenByCredentials(req: Partial<oauth2.IRequestToCreateTokenByCredentials>): Promise<oauth2.IResponseToCreateTokenByCredentials>;
 }
 
 export interface IJwtPayload {

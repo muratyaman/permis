@@ -5,28 +5,6 @@
 import { IBaseDto } from '../dto';
 import { IJwtPayload } from '../types';
 
-export enum GrantTypeEnum {
-  authorization_code = 'authorization_code',
-  client_credentials = 'client_credentials',
-  password           = 'password',
-  refresh_token      = 'refresh_token',
-}
-
-export enum ResponseTypeEnum {
-  code  = 'code',
-  token = 'token',
-}
-
-export enum ErrorTypeEnum {
-  access_denied             = 'access_denied',
-  invalid_request           = 'invalid_request',
-  invalid_scope             = 'invalid_scope',
-  server_error              = 'server_error',
-  temporarily_unavailable   = 'temporarily_unavailable',
-  unauthorized_client       = 'unauthorized_client',
-  unsupported_response_type = 'unsupported_response_type',
-}
-
 export interface IError {
   error:              ErrorTypeEnum;
   error_description?: string;
@@ -36,7 +14,7 @@ export type IRequestToAuthorize  = IRequestToStartAuthorization  | IRequestToFin
 export type IResponseToAuthorize = IResponseToStartAuthorization | IResponseToFinishAuthorization;
 
 export interface IRequestToStartAuthorization {
-  response_type:  string | 'code' | 'token';
+  response_type:  ResponseType | ResponseTypeEnum;
   client_id:      string;
   redirect_uri:   string;
   scope:          string;
@@ -45,7 +23,7 @@ export interface IRequestToStartAuthorization {
 }
 export interface IResponseToStartAuthorization {
   request:      IRequestToStartAuthorization;
-  redirect_uri: URL;
+  redirect_uri: URL | null;
   success?:     { consent_id: string; client: IBaseDto };
   error?:       IError;
 }
@@ -58,7 +36,7 @@ export interface IRequestToFinishAuthorization extends IRequestToStartAuthorizat
 
 export interface IResponseToFinishAuthorization {
   request:       IRequestToFinishAuthorization;
-  redirect_uri?: URL;
+  redirect_uri?: URL | null;
   success?:      { code: string; }
   error?:        IError;
 }
@@ -105,7 +83,50 @@ export interface IRequestToAuthenticate {
 }
 
 export interface IResponseToAuthenticate {
-  request: IRequestToAuthenticate;
+  request:  IRequestToAuthenticate;
   success?: IJwtPayload;
-  error?: IError;
+  error?:   IError;
+}
+
+// DEFINE ENUMS BELOW  * * * * * * * * *
+
+export type ResponseType = 'code' | 'token';
+
+export enum ResponseTypeEnum {
+  code  = 'code',
+  token = 'token',
+}
+
+export type GrantType =
+  | 'authorization_code'
+  | 'client_credentials'
+  | 'password'
+  | 'refresh_token'
+;
+
+export enum GrantTypeEnum {
+  authorization_code = 'authorization_code',
+  client_credentials = 'client_credentials',
+  password           = 'password',
+  refresh_token      = 'refresh_token',
+}
+
+export type ErrorType = 
+  | 'access_denied'
+  | 'invalid_request'
+  | 'invalid_scope'
+  | 'server_error'
+  | 'temporarily_unavailable'
+  | 'unauthorized_client'
+  | 'unsupported_response_type'
+;
+
+export enum ErrorTypeEnum {
+  access_denied             = 'access_denied',
+  invalid_request           = 'invalid_request',
+  invalid_scope             = 'invalid_scope',
+  server_error              = 'server_error',
+  temporarily_unavailable   = 'temporarily_unavailable',
+  unauthorized_client       = 'unauthorized_client',
+  unsupported_response_type = 'unsupported_response_type',
 }

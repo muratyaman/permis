@@ -12,11 +12,11 @@ export interface ISecurityService<TJwtModel extends IJwtPayload = IJwtPayload> {
   generateJwt(payload: TJwtModel, expiryInSeconds?: number): Promise<string>;
   verifyJwt(token: string): Promise<TJwtModel>;
 
-  makeBasicAuthToken(input: IUserAndPass): string;
-  verifyBasicAuth(token: string): IUserAndPass;
+  makeBasicAuthToken(input: IUserCredentials): string;
+  verifyBasicAuth(token: string): IUserCredentials;
 }
 
-export interface IUserAndPass {
+export interface IUserCredentials {
   username: string;
   password: string;
 }

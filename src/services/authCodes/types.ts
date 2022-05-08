@@ -12,9 +12,10 @@ export interface IAuthCodeService<T extends IAuthCodeDto = IAuthCodeDto> {
 /**
  * Authorization code model to be created when a consent is given (approved)
  */
- export interface IAuthCodeDto extends IBaseDto {
-  consent_id: string;
+export interface IAuthCodeDto extends IBaseDto {
+  code:       string;
+  consent_id: IdType;
   expires_at: RawDateType;
-  is_used:    boolean | number; // 0 or 1
+  status:     string | 'ACTIVE' | 'USED' | 'EXPIRED';
 }
 export type IAuthCodeDtoToWrite = Partial<Omit<IAuthCodeDto, 'id' | 'created_at' | 'updated_at'>>;

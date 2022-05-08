@@ -1,18 +1,22 @@
 import { IdType, IObject } from '../../dto';
+import { ErrRecordNotFound } from '../../errors';
 import { RepoWithRedis } from '../../repos';
 import { assertString, ts, uuid } from '../../utils';
+import { ISecurityService } from '../security';
 import { IAuthCodeDto, IAuthCodeService } from './types';
 
 export class AuthCodeServiceWithRedis implements IAuthCodeService<IAuthCodeDto> {
 
-  constructor(public readonly repo: RepoWithRedis<IAuthCodeDto>) {}
+  constructor(public readonly repo: RepoWithRedis<IAuthCodeDto>, public readonly securityService: ISecurityService) {}
 
   async findMany(conditions: IObject): Promise<IAuthCodeDto[]> {
     return this.repo.findMany(conditions);
   }
 
   async findByCode(code: string): Promise<IAuthCodeDto> {
-    return this.repo.retrieve(code); // code is id
+    const rows = await this.repo.findMany({ code });
+    if (!rows || !rows.length) throw new ErrRecordNotFound('Authorization code not found');
+    return rows[0];
   }
 
   async create(dto: Partial<IAuthCodeDto>): Promise<IAuthCodeDto> {
@@ -20,8 +24,9 @@ export class AuthCodeServiceWithRedis implements IAuthCodeService<IAuthCodeDto> 
 
     const _dto: IAuthCodeDto = {
       id:         dto.id ?? uuid(),
+      code:       await this.securityService.generateRandomString(64),
       client_id:  assertString(String(dto.client_id ?? ''), 'client_id missing'),
-      is_used:    dto.is_used ?? 0,
+      status:     dto.status ?? 'ACTIVE',
       expires_at: dto.expires_at ?? '',
       consent_id: dto.consent_id ?? '',
       created_at: ts(),
@@ -35,9 +40,9 @@ export class AuthCodeServiceWithRedis implements IAuthCodeService<IAuthCodeDto> 
     return this.repo.retrieve(String(id));
   }
 
-  async update(code: IdType, dto: Partial<IAuthCodeDto>): Promise<boolean> {
-    return this.repo.update(String(code), {
-      is_used:    dto.is_used ?? 0,
+  async update(id: IdType, dto: Partial<IAuthCodeDto>): Promise<boolean> {
+    return this.repo.update(String(id), {
+      status:     dto.status ?? '',
       updated_at: ts(),
     });
   }

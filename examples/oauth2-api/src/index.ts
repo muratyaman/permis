@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { factory } from './factory';
 
 main();

@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { api } from '../api';
 import { oauth2Api } from '../oauth2Api';
 
-const grant_type = 'code';
+const grant_type = 'authorization_code';
 const scope = 'profile:read';
 
-export const AuthCompletePage = () => {
+export const AuthFinishPage = () => {
   const { client_id, redirect_uri } = oauth2Api._conf;
 
   const navigate = useNavigate();
@@ -17,12 +18,15 @@ export const AuthCompletePage = () => {
       if (code) {
         const res = await oauth2Api.tokenCreate({ grant_type, code, client_id, redirect_uri, scope });
         if (res.token) {
-          navigate('/?token=' + res.token);
+          api._setToken(res.token);
+          navigate('/');
+        } else {
+          // show error
         }
       }
     }
     load();
-  }, [code, client_id, redirect_uri]);
+  }, [navigate, code, client_id, redirect_uri]);
 
   return (
     <div>

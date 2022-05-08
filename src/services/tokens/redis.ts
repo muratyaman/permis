@@ -19,7 +19,7 @@ export class TokenServiceWithRedis implements ITokenService<ITokenDto> {
       id:                       dto.id ?? uuid(),
       user_id:                  assertString(String(dto.user_id ?? ''), 'user_id missing'),
       client_id:                assertString(String(dto.client_id ?? ''), 'client_id missing'),
-      is_used:                  dto.is_used ?? 0,
+      status:                   dto.status ?? 'ACTIVE',
       token_type:               dto.token_type ?? 'bearer',
       access_token:             assertString(dto.access_token ?? '', 'access_token missing'),
       access_token_expires_at:  dto.access_token_expires_at ?? '',
@@ -35,7 +35,7 @@ export class TokenServiceWithRedis implements ITokenService<ITokenDto> {
 
   async update(id: IdType, dto: Partial<ITokenDto>): Promise<boolean> {
     return this.repo.update(String(id), {
-      is_used:    dto.is_used ?? 0,
+      status:     dto.status ?? '',
       updated_at: ts(),
     });
   }
