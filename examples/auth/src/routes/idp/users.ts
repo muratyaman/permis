@@ -1,7 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { sendError } from '../../errors';
 import * as p from '../../permis';
-import { ErrBadRequest, PermisError } from '../../permis';
+import { ErrBadRequest } from '../../permis';
 import { IFactory } from '../../types';
 
 export function makeRoutes(f: IFactory, _router: Router) {

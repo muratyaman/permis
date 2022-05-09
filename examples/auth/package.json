@@ -1,7 +1,7 @@
 {
-  "name": "permis-oauth2-api",
+  "name": "permis-auth",
   "version": "1.0.0",
-  "description": "sample permis api for services like authorization codes, clients, consumers, identities, scopes and tokens",
+  "description": "sample permis api and app for services like authorization codes, clients, consumers, identities, scopes and tokens",
   "main": "build/index.js",
   "scripts": {
     "clean": "rimraf lib",

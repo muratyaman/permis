@@ -6,6 +6,7 @@ export type IConsole = typeof console;
 export type IProcessEnv = typeof process.env;
 
 export interface IEnvSettings extends IProcessEnv {
+  HTTP_PORT?: string;
   REDIS_URL?: string;
 }
 

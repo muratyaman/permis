@@ -4,9 +4,9 @@ import { readFileSync } from 'fs';
 import { createClient } from 'redis';
 import { makeRoutes } from './routes';
 import * as p from './permis';
-import { IFactory } from './types';
+import { IEnvSettings, IFactory } from './types';
 
-export async function factory(penv = process.env): Promise<IFactory> {
+export async function factory(penv: IEnvSettings): Promise<IFactory> {
   const server = express();
 
   server.use(bodyParser.urlencoded({ extended: false }));
