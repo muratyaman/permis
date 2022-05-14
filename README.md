@@ -441,7 +441,7 @@ Then, we can "clone" old token record, create a new token record (with new acces
 Client can use access token to make calls to APIs/Resources, using authorization header containing token.
 
 ```
-GET https://[api-gateway]/billing-api/v1/invoices/:id
+GET [RESOURCE-HOST]/billing-api/v1/invoices/:id
 ```
 
 It needs to communicate with OAuth2 server and verify token, using authorization header containing token!
@@ -449,6 +449,8 @@ It needs to communicate with OAuth2 server and verify token, using authorization
 ```
 GET [OAUTH2-HOST]/authenticate
 ```
+
+Resource service needs to be passed: `user_id` and `scope`(list e.g. `invoices:read`). Then, it can decide whether that user can retrieve the details of that particular invoice or not! It could still use other info to support that decision: like user `roles` and `permissions`, `type` of a record, `status` of a record etc.
 
 ## Appendix
 
