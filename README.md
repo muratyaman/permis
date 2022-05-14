@@ -422,7 +422,7 @@ Input:
 {
   "client_id": "CLIENT-ID",
   "grant_type": "refresh_token",
-  "refresh_token": "AUTH-CODE"
+  "refresh_token": "REFRESH-TOKEN"
 }
 ```
 
@@ -434,14 +434,20 @@ We need to find by using unique refresh token and update existing token record; 
 }
 ```
 
-Then, we can create a new token record and send it to client which needs to store access token and refresh token as usual.
+Then, we can "clone" old token record, create a new token record (with new access token and refresh token) and send it to client which needs to store access token and refresh token as usual. The old access token and refresh token cannot be used.
 
 ### G.2. Access Resources
 
-Client can use access token to make calls to APIs/Resources.
+Client can use access token to make calls to APIs/Resources, using authorization header containing token.
 
 ```
 GET https://[api-gateway]/billing-api/v1/invoices/:id
+```
+
+It needs to communicate with OAuth2 server and verify token, using authorization header containing token!
+
+```
+GET [OAUTH2-HOST]/authenticate
 ```
 
 ## Appendix
